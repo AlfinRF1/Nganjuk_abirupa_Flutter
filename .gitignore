@@ -1,20 +1,10 @@
-<<<<<<< HEAD
+# Android Studio & Gradle
+.gradle/
+build/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
 local.properties
-=======
+.idea/
+
 # Miscellaneous
 *.class
 *.log
@@ -35,10 +25,8 @@ migrate_working_dir/
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# Visual Studio Code related
+.vscode/
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -50,14 +38,12 @@ migrate_working_dir/
 /build/
 /coverage/
 
-# Symbolication related
-app.*.symbols
-
-# Obfuscation related
-app.*.map.json
-
-# Android Studio will place build artifacts here
+# Android Studio artifacts
 /android/app/debug
 /android/app/profile
 /android/app/release
->>>>>>> b029dd2 (SplashScreen, Login, Register, Dashboard)
+
+# --- PENTING: RAHASIA NEGARA ---
+.env
+*.secret
+# ------------------------------

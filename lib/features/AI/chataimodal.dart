@@ -14,27 +14,23 @@ class _ChatAiModalState extends State<ChatAiModal> {
   bool _isLoading = false;
 
   void _kirimPesan() async {
-    if (_controller.text.isEmpty) return; // Mencegah kirim pesan kosong
+    if (_controller.text.trim().isEmpty) return; 
+
+    // Simpan teksnya dulu, terus hapus inputannya biar berasa kayak chat beneran
+    String pesanUser = _controller.text;
+    _controller.clear(); 
 
     setState(() => _isLoading = true);
     
-    try {
-      // Panggil service AI
-      String hasil = await AiService.tanyaWisata(_controller.text);
-      if (mounted) {
-        setState(() {
-          _jawaban = hasil;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      // Tangani kalau API error
-      if (mounted) {
-        setState(() {
-          _jawaban = "Waduh, koneksi ke AI gagal nih. Coba cek internet atau API Key ya!";
-          _isLoading = false;
-        });
-      }
+    // Kita panggil service AI. 
+    // Apapun hasilnya (sukses/error), service kita sekarang return-nya String.
+    String hasil = await AiService.tanyaWisata(pesanUser);
+
+    if (mounted) {
+      setState(() {
+        _jawaban = hasil;
+        _isLoading = false;
+      });
     }
   }
 
