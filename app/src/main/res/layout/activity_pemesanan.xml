@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F0F3F8"
+    tools:context=".PemesananActivity">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/btnBack"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_circle_white"
+                    android:src="@drawable/arrow_back"
+                    android:scaleType="centerInside"
+                    android:elevation="2dp"
+                    app:tint="#4e4e4e"
+                    android:contentDescription="Kembali" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Detail Pesanan"
+                    android:fontFamily="@font/poppins_bold"
+                    android:textColor="#4e4e4e"
+                    android:textSize="18sp" />
+
+                <View
+                    android:layout_width="40dp"
+                    android:layout_height="1dp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:text="Nama"
+                android:fontFamily="@font/poppins_semibold"
+                android:textColor="#4e4e4e"
+                android:textSize="14sp" />
+
+            <EditText
+                android:id="@+id/etNama"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/edittext_background"
+                android:hint="Nama Lengkap"
+                android:inputType="textPersonName"
+                android:padding="12dp"
+                android:fontFamily="@font/poppins_medium"
+                android:textColor="#4e4e4e"
+                android:textColorHint="#9E9E9E"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:text="Nomor Telepon"
+                android:fontFamily="@font/poppins_semibold"
+                android:textColor="#4e4e4e"
+                android:textSize="14sp" />
+
+            <EditText
+                android:id="@+id/etTelepon"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/edittext_background"
+                android:hint="+62 123 123 123"
+                android:inputType="phone"
+                android:padding="12dp"
+                android:fontFamily="@font/poppins_medium"
+                android:textColor="#4e4e4e"
+                android:textColorHint="#9E9E9E"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:text="Tanggal Pemesanan"
+                android:fontFamily="@font/poppins_semibold"
+                android:textColor="#4e4e4e"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/etTanggal"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/edittext_background"
+                    android:focusable="false"
+                    android:hint="DD/MM/YYYY"
+                    android:padding="12dp"
+                    android:fontFamily="@font/poppins_medium"
+                    android:textColor="#4e4e4e"
+                    android:textColorHint="#9E9E9E"
+                    android:textSize="14sp" />
+
+                <ImageButton
+                    android:id="@+id/btnCalendar"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/edittext_background"
+                    android:src="@drawable/ic_calender1"
+                    android:contentDescription="Pilih tanggal"
+                    android:scaleType="center"
+                    android:padding="12dp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:text="Jumlah Pesanan"
+                android:fontFamily="@font/poppins_semibold"
+                android:textColor="#4e4e4e"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/btnJumlah"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:background="@color/common_google_signin_btn_tint"
+                android:gravity="start|center_vertical"
+                android:minHeight="48dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:text="00 Dewasa, 00 Anak"
+                android:textAllCaps="false"
+                android:fontFamily="@font/poppins_medium"
+                android:textColor="#9E9E9E"
+                android:textSize="14sp"
+                app:cornerRadius="8dp" />
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#FFFFFF"
+        android:elevation="8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="83dp"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvLabelDewasa"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/poppins_medium"
+                    android:text="Dewasa 1 x Rp 10.000"
+                    android:textColor="#4e4e4e"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvHargaDewasa"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins_medium"
+                    android:text="Rp 10.000"
+                    android:textColor="#4e4e4e"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvLabelAnak"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/poppins_medium"
+                    android:text="Anak 0 x Rp 7.000"
+                    android:textColor="#4e4e4e"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvHargaAnak"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins_medium"
+                    android:text="Rp 0"
+                    android:textColor="#4e4e4e"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvLabelAsuransi"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/poppins_medium"
+                    android:text="Asuransi 2 x Rp 1.000"
+                    android:textColor="#4e4e4e"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvAsuransi"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins_medium"
+                    android:text="Rp 2.000"
+                    android:textColor="#4e4e4e"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#EEEEEE" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Total"
+                android:fontFamily="@font/poppins_bold"
+                android:textSize="16sp"
+                android:textColor="#4e4e4e" />
+
+            <TextView
+                android:id="@+id/tvTotal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Rp 12.000"
+                android:fontFamily="@font/poppins_bold"
+                android:textSize="16sp"
+                android:textColor="#03B6A7" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnBayar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Bayar sekarang"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#03B6A7"
+            android:padding="14dp"
+            android:fontFamily="@font/poppins_semibold"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="16dp"
+            android:layout_marginTop="4dp"
+            app:cornerRadius="8dp" />
+    </LinearLayout>
+</LinearLayout>

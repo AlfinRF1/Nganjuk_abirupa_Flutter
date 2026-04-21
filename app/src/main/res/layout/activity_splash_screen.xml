@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/gradient_background"
+    android:padding="32dp">
+
+    <!-- Logo Tengah -->
+    <ImageView
+        android:id="@+id/logoImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:src="@drawable/logo_awal"
+        android:contentDescription="Logo Nganjuk Abirupa"
+        android:adjustViewBounds="true"
+        android:maxWidth="250dp"
+        android:maxHeight="250dp" />
+
+    <!-- Teks Branding di Bawah -->
+    <ImageView
+        android:id="@+id/brandingImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="24dp"
+        android:src="@drawable/logo_awal2"
+        android:contentDescription="Teks branding Nganjuk Abirupa"
+        android:adjustViewBounds="true"
+        android:maxWidth="300dp"
+        android:maxHeight="80dp" />
+</RelativeLayout>

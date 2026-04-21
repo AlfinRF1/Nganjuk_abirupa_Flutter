@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="gradientStart">#91CE65</color> <!-- Green -->
+    <color name="gradientMiddle">#2E9FA6</color> <!-- Teal -->
+    <color name="gradientEnd">#125C9F</color> <!-- Blue -->
+</resources>

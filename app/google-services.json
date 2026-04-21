@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1004349335287",
+    "project_id": "nganjuk-abirupa",
+    "storage_bucket": "nganjuk-abirupa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1004349335287:android:c39e924f68d0fb7fba15f2",
+        "android_client_info": {
+          "package_name": "com.example.nganjukabirupa"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1004349335287-c4ngr7dn87k5g02uv5hsnpaf1enuh8oh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.nganjukabirupa",
+            "certificate_hash": "75bcf9306a9f8f02af198e1049481efec191398e"
+          }
+        },
+        {
+          "client_id": "1004349335287-jtbvsoctlcnb4qrku3sb1advpnhesqtj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAb78F7vv7iripzp-ViEj_XBK6yqPCbWeI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1004349335287-jtbvsoctlcnb4qrku3sb1advpnhesqtj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

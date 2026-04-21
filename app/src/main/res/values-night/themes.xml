@@ -1,0 +1,28 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="Base.Theme.NganjukAbirupa" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Warna utama aplikasi di dark mode -->
+        <item name="colorPrimary">@color/gradientMiddle</item>
+        <item name="colorOnPrimary">@android:color/black</item>
+
+        <!-- Background gelap -->
+        <item name="colorSurface">#121212</item>
+        <item name="colorOnSurface">@android:color/white</item>
+
+        <!-- Secondary -->
+        <item name="colorSecondary">@color/gradientEnd</item>
+        <item name="colorOnSecondary">@android:color/black</item>
+
+        <!-- Font default -->
+        <item name="android:fontFamily">@font/poppins_regular</item>
+    </style>
+
+    <style name="Theme.NganjukAbirupa" parent="Base.Theme.NganjukAbirupa" />
+
+    <style name="Theme.NganjukAbirupa.Splash" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@drawable/gradient_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">#121212</item>
+    </style>
+
+</resources>

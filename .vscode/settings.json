@@ -1,0 +1,7 @@
+{
+<<<<<<< HEAD
+    "java.configuration.updateBuildConfiguration": "automatic"
+=======
+    "cmake.ignoreCMakeListsMissing": true
+>>>>>>> b029dd2 (SplashScreen, Login, Register, Dashboard)
+}

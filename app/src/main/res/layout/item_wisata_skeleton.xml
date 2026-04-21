@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:padding="8dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"> <!-- jarak antar skeleton -->
+
+    <!-- Kotak gambar -->
+    <View
+        android:layout_width="100dp"
+        android:layout_height="80dp"
+        android:background="@android:color/darker_gray"
+        android:layout_marginEnd="12dp"/>
+
+    <!-- Placeholder teks -->
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1">
+
+        <!-- Judul wisata -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="18dp"
+            android:background="@android:color/darker_gray"
+            android:layout_marginBottom="8dp"/>
+
+        <!-- Lokasi wisata (70% lebar parent) -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="14dp"
+                android:layout_weight="0.7"
+                android:background="@android:color/darker_gray"/>
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="14dp"
+                android:layout_weight="0.3"/>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

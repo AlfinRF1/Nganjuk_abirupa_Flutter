@@ -1,0 +1,35 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Base application theme -->
+    <style name="Base.Theme.NganjukAbirupa" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Warna utama aplikasi -->
+        <item name="colorPrimary">@color/gradientMiddle</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+
+        <!-- Warna background -->
+        <item name="colorSurface">@android:color/white</item>
+        <item name="colorOnSurface">@android:color/black</item>
+
+        <!-- Warna secondary -->
+        <item name="colorSecondary">@color/gradientEnd</item>
+        <item name="colorOnSecondary">@android:color/white</item>
+
+        <!-- Status bar & navigation bar -->
+        <item name="android:statusBarColor">?attr/colorPrimary</item>
+        <item name="android:navigationBarColor">?attr/colorSurface</item>
+
+        <!-- Font default -->
+        <item name="android:fontFamily">@font/poppins_regular</item>
+    </style>
+
+    <!-- Theme utama aplikasi -->
+    <style name="Theme.NganjukAbirupa" parent="Base.Theme.NganjukAbirupa" />
+
+    <!-- Theme khusus Splash Screen -->
+    <style name="Theme.NganjukAbirupa.Splash" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@drawable/gradient_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+    </style>
+
+</resources>

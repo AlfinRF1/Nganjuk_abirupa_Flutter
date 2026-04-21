@@ -1,0 +1,9 @@
+{
+  "animation": {
+    "slideUp": {
+      "duration": 700,
+      "fps": 240,
+      "interpolator": "AccelerateDecelerate"
+    }
+  }
+}

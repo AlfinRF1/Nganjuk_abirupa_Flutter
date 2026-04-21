@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardBackgroundColor="@android:color/white"
+    app:cardCornerRadius="16dp"  app:cardElevation="0dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="16dp">
+
+            <ImageView
+                android:id="@+id/ivBackDialog"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/arrow_back" android:contentDescription="Kembali"
+                android:layout_marginEnd="8dp"
+                app:tint="#444444" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Pilih Pengunjung"
+                android:fontFamily="@font/poppins_bold"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:gravity="center"
+                android:textColor="#4e4e4e" />
+
+            <View
+                android:layout_width="32dp"
+                android:layout_height="1dp"
+                android:visibility="invisible" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingVertical="8dp"
+            android:layout_marginBottom="8dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins_semibold"
+                    android:text="Dewasa"
+                    android:textColor="#4e4e4e"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="10 tahun ke atas"
+                    android:fontFamily="@font/poppins_regular"
+                    android:textSize="12sp"
+                    android:textColor="#999999" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/rounded_counter_bg">
+
+                <ImageButton
+                android:id="@+id/btnMinDewasa"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="#D9D9D9"
+                android:padding="8dp"
+                android:src="@drawable/ic_minus"
+                android:contentDescription="Kurangi Dewasa"
+                app:tint="#4e4e4e" />
+
+                <TextView
+                    android:id="@+id/tvCountDewasa"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="00"
+                    android:fontFamily="@font/poppins_medium"
+                    android:textSize="16sp"
+                    android:textColor="#4e4e4e"
+                    android:paddingHorizontal="8dp"
+                    android:gravity="center" />
+
+                <ImageButton
+                    android:id="@+id/btnPlusDewasa"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="@color/gradientMiddle" android:padding="8dp"
+                    android:src="@drawable/ic_plus"
+                    android:contentDescription="Tambah Dewasa"
+                    app:tint="#ffff" />
+
+            </LinearLayout>
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#E0E0E0"
+            android:layout_marginVertical="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingVertical="8dp"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Anak Anak"
+                    android:fontFamily="@font/poppins_semibold"
+                    android:textSize="16sp"
+                    android:textColor="#4e4e4e" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Anak dibawah 10 tahun"
+                    android:fontFamily="@font/poppins_regular"
+                    android:textSize="12sp"
+                    android:textColor="#999999" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/rounded_counter_bg">
+
+                <ImageButton
+                    android:id="@+id/btnMinAnak"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="#D9D9D9"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_minus"
+                    android:contentDescription="Kurangi Anak"
+                    app:tint="#4e4e4e" />
+
+                <TextView
+                    android:id="@+id/tvCountAnak"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="00"
+                    android:textSize="16sp"
+                    android:fontFamily="@font/poppins_medium"
+                    android:textColor="#4e4e4e"
+                    android:paddingHorizontal="8dp"
+                    android:gravity="center" />
+
+                <ImageButton
+                    android:id="@+id/btnPlusAnak"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="@color/gradientMiddle"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_plus"
+                    android:contentDescription="Tambah Anak"
+                    app:tint="#ffffff" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="0dp"
+            android:layout_marginBottom="24dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="#F0F8F7"  android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="8dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_info"
+                        android:contentDescription="Informasi"
+                        android:layout_marginEnd="8dp"
+                        app:tint="#03B6A7" />
+                    <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ketentuan Pemesanan Tiket"
+                        android:fontFamily="@font/poppins_semibold"
+                    android:textStyle="bold"
+                    android:textColor="#4e4e4e"
+                    android:textSize="14sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="■ Validitas Tiket: Hanya berlaku untuk tanggal kunjungan yang dipilih."
+                        android:fontFamily="@font/poppins_regular"
+                        android:textColor="#818181"
+                        android:textSize="12sp"
+                        android:lineSpacingExtra="4dp"
+                        android:layout_marginBottom="4dp"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="■ Pembatalan: Tiket yang sudah dibeli tidak dapat dibatalkan, diubah tanggal, atau diuangkan kembali (non-refundable)."
+                        android:fontFamily="@font/poppins_regular"
+                        android:textColor="#818181"
+                        android:textSize="12sp"
+                        android:lineSpacingExtra="4dp"
+                        android:layout_marginBottom="4dp"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="■ Usia Pengunjung:\n    • Dewasa: 10 tahun ke atas.\n    • Anak-anak: Di bawah 10 tahun."
+                        android:fontFamily="@font/poppins_regular"
+                        android:textColor="#818181"
+                        android:textSize="12sp"
+                        android:lineSpacingExtra="4dp"
+                        android:layout_marginBottom="4dp"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <Button
+            android:id="@+id/btnSimpan"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Simpan"
+            android:fontFamily="@font/poppins_semibold"
+            android:textSize="19dp"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#03B6A7"
+
+            app:cornerRadius="12dp" /> </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
