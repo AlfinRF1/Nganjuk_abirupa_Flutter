@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nganjukabirupa/core/models/wisata_model.dart';
 import 'package:nganjukabirupa/core/network/api_service.dart';
+import 'package:nganjukabirupa/features/AI/chataimodal.dart';
+import 'package:nganjukabirupa/features/dashboard/detail_wisata_screen.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -94,27 +96,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF0F3F8), // Warna background dari XML lu
       
-      // BOTTOM NAVIGATION BAR (Pengganti Footer LinearLayout lu)
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        selectedItemColor: const Color(0xFF2E9FA6),
-        unselectedItemColor: Colors.grey,
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-        unselectedLabelStyle: const TextStyle(fontSize: 12),
-        onTap: (index) {
-          // Navigasi ke halaman lain
-          if (index == 1) {
-            // Navigator.pushNamed(context, '/riwayat'); // Buka ntar kalau halamannya udah ada
-          } else if (index == 2) {
-            // Navigator.pushNamed(context, '/profile');
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Riwayat'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
+      // --- TAMBAHAN: FLOATING ACTION BUTTON AI ---
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => showModalBottomSheet(
+          isScrollControlled: true,
+          context: context, 
+          builder: (c) => ChatAiModal() // Ini modal AI yang tadi kita buat
+        ),
+        backgroundColor: const Color(0xFF2E9FA6),
+        child: const Icon(Icons.smart_toy, color: Colors.white),
       ),
+      // ------------------------------------------
+
+      // BOTTOM NAVIGATION BAR (Pengganti Footer LinearLayout lu)
+      // Note: Kalau lu pake main_navigation.dart, blok bottomNavigationBar ini bisa lu hapus nanti
       
       body: SafeArea(
         child: RefreshIndicator(
@@ -130,7 +125,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: _isLoading
                     ? _buildShimmerLoading() // Kalau loading tampilkan Shimmer
                     : _filteredWisata.isEmpty
-                        ? const Center(child: Text("Wisata tidak ditemukan"))
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.search_off, size: 64, color: Colors.grey),
+                                const SizedBox(height: 16),
+                                const Text("Wisata tidak ditemukan"),
+                                TextButton(onPressed: _fetchWisata, child: const Text("Coba Refresh"))
+                              ],
+                            ),
+                          )
                         : _buildWisataList(), // Kalau selesai tampilkan Data
               ),
             ],
@@ -211,7 +216,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // WIDGET DATA LIST WISATA
   // ==========================================
   Widget _buildWisataList() {
-    // Spacer untuk search bar yang melayang
     return ListView.builder(
       padding: const EdgeInsets.only(top: 40, left: 16, right: 16, bottom: 16),
       itemCount: _filteredWisata.length,
@@ -221,30 +225,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
           elevation: 2,
           margin: const EdgeInsets.only(bottom: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          clipBehavior: Clip.hardEdge, // <-- Tambahin ini biar efek kliknya rapi
           child: InkWell(
             onTap: () {
-              // Nanti kita arahkan ke halaman Detail (activity_rorokuning.xml)
-              print("Klik wisata: ${wisata.namaWisata}");
+              // --- INI KODE BUAT PINDAH HALAMANNYA BRE ---
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DetailWisataScreen(wisata: wisata),
+                ),
+              );
+              // -------------------------------------------
             },
             child: Row(
               children: [
-                // Gambar Wisata
-                // GANTI BAGIAN GAMBAR JADI SEPERTI INI:
+                // GAMBAR WISATA
                 ClipRRect(
                   borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(12),
                       bottomLeft: Radius.circular(12)),
                   child: wisata.gambar.isEmpty
-                      // Kalau entah kenapa nama gambarnya kosong dari database
                       ? Container(
                           width: 100, height: 100, color: Colors.grey[300],
                           child: const Icon(Icons.image_not_supported, color: Colors.grey),
                         )
-                      // LOGIKA HYBRID: Cek variabel isLocalImage dari model
                       : wisata.isLocalImage
-                          // 1. JIKA FOTO LOKAL (5 Wisata Utama)
                           ? Image.asset(
-                              wisata.gambar, // Ngebaca 'assets/images/...'
+                              wisata.gambar,
                               width: 100,
                               height: 100,
                               fit: BoxFit.cover,
@@ -255,9 +262,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 );
                               },
                             )
-                          // 2. JIKA FOTO INTERNET (Wisata Baru dari Admin)
                           : CachedNetworkImage(
-                              imageUrl: wisata.gambar, // Ngebaca 'https://...'
+                              imageUrl: wisata.gambar,
                               width: 100,
                               height: 100,
                               fit: BoxFit.cover,
@@ -270,7 +276,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(width: 12),
                 
-                // Teks Detail
+                // TEKS DETAIL
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
@@ -311,7 +317,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // ==========================================
-  // WIDGET SKELETON LOADING (Pengganti item_wisata_skeleton.xml)
+  // WIDGET SKELETON LOADING
   // ==========================================
   Widget _buildShimmerLoading() {
     return ListView.builder(

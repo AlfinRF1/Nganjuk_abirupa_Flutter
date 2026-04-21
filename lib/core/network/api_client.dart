@@ -6,8 +6,8 @@ class ApiClient {
   static Dio getClient() {
     Dio dio = Dio(BaseOptions(
       baseUrl: baseUrl,
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
+      connectTimeout: const Duration(seconds: 30), // Pake yang 30 detik biar aman
+      receiveTimeout: const Duration(seconds: 30),
     ));
 
     // Logging Interceptor (Sama kayak HttpLoggingInterceptor di Java)

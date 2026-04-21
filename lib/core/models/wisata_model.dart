@@ -8,7 +8,7 @@ class WisataModel {
   final String fasilitas;
   final String deskripsi;
   final String gambar;
-  final bool isLocalImage; // <--- Variabel baru buat nentuin ini foto lokal atau hosting
+  final bool isLocalImage;
 
   WisataModel({
     required this.idWisata,
@@ -20,7 +20,7 @@ class WisataModel {
     required this.fasilitas,
     required this.deskripsi,
     required this.gambar,
-    required this.isLocalImage, // <--- Wajib diisi
+    required this.isLocalImage,
   });
 
   factory WisataModel.fromJson(Map<String, dynamic> json) {
@@ -58,10 +58,8 @@ class WisataModel {
     // 2. Kalau bukan, berarti ini Wisata Baru (Ambil dari Hostinger)
     else {
       isLokal = false;
-      // Perhatikan path URL ini. Karena lu bilang fotonya di public_html > assets > images > destinasi,
-      // Berarti URL-nya langsung nembak dari root domain lu.
       finalPathGambar = namaFileGambar.isNotEmpty
-          ? 'https://nganjukabirupa.pbltifnganjuk.com/assets/images/destinasi/' + namaFileGambar
+          ? 'https://nganjukabirupa.pbltifnganjuk.com/assets/images/destinasi/$namaFileGambar'
           : '';
     }
     // ----------------------------------
@@ -75,8 +73,8 @@ class WisataModel {
       biayaAsuransi: json['biaya_asuransi']?.toString() ?? json['biayaAsuransi']?.toString() ?? '-',
       fasilitas: json['fasilitas'] ?? '',
       deskripsi: json['deskripsi'] ?? '',
-      gambar: finalPathGambar, // <--- Berisi 'assets/...' atau 'https://...'
-      isLocalImage: isLokal,   // <--- Menyimpan status true/false
+      gambar: finalPathGambar,
+      isLocalImage: isLokal,
     );
   }
 }
