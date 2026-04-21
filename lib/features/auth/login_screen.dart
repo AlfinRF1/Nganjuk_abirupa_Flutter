@@ -19,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   
   bool _isLoading = false;
+  bool _isPasswordVisible = false; // Fix undefined _isPasswordVisible
 
   // Key untuk SharedPreferences
   static const String _keyId = "id_customer";
@@ -31,6 +32,20 @@ class _LoginScreenState extends State<LoginScreen> {
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? id = prefs.getString(_keyId);
+    if (id != null) {
+      if (mounted) Navigator.pushReplacementNamed(context, '/dashboard');
+    }
   }
 
   // 1. Logic Login Manual
@@ -46,38 +61,43 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      var url = Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/apimobile/login.php');
-      var response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"nama_customer": nama, "password_customer": password}),
-      );
+    var url = Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/apimobile/login.php');
+    var response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"nama_customer": nama, "password_customer": password}),
+    );
 
-      if (response.statusCode == 200) {
-        var res = jsonDecode(response.body);
-        if (res['success'] == true) {
-          await _saveSession(
-            res['id_customer'].toString(),
-            res['nama_customer'],
-            res['email_customer'],
-            null, // Manual login mungkin tidak balikin foto
-          );
-          if (!mounted) return;
-          Navigator.pushReplacementNamed(context, '/dashboard');
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'])));
-        }
+    if (response.statusCode == 200) {
+      var res = jsonDecode(response.body);
+      if (res['success'] == true) {
+        // --- PERBAIKAN DI SINI ---
+        await _saveSession(
+          res['id_customer'].toString(),
+          res['nama_customer'],
+          res['email_customer'],
+          res['foto'], // Pakai res['foto'], JANGAN 'null' lagi bre!
+        );
+        // -------------------------
+
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'])));
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+  } finally {
+    if (mounted) setState(() => _isLoading = false);
   }
+}
+
+  
 
   // 2. Logic Login Google
   
-bool _isPasswordVisible = false; // Fix undefined _isPasswordVisible
+
 
 // 2. Update _loginWithGoogle jadi seperti ini
 Future<void> _loginWithGoogle() async {
@@ -144,12 +164,16 @@ Future<void> _loginWithGoogle() async {
 
   // Helper Simpan Sesi
   Future<void> _saveSession(String id, String nama, String email, String? foto) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyId, id);
-    await prefs.setString(_keyNama, nama);
-    await prefs.setString(_keyEmail, email);
-    if (foto != null) await prefs.setString(_keyFoto, foto);
-  }
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString(_keyId, id);
+  await prefs.setString(_keyNama, nama);
+  await prefs.setString(_keyEmail, email);
+  
+  // Pakai ini: Kalau foto null, simpen string kosong ("") biar foto lama kehapus
+  await prefs.setString(_keyFoto, foto ?? ""); 
+  
+  print("DEBUG LOGIN: Berhasil simpen foto -> ${foto ?? 'Kosong'}");
+}
 
   @override
   Widget build(BuildContext context) {
@@ -297,9 +321,29 @@ Future<void> _loginWithGoogle() async {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 15.0),
+
+                    // --- TAMBAHIN BLOK INI ---
+                    Align(
+                      alignment: Alignment.centerRight, // Biar posisinya di kanan kayak desain lu
+                      child: GestureDetector(
+                        onTap: () {
+                          // Ini logic buat pindah ke halaman Lupa Kata Sandi
+                          Navigator.pushNamed(context, '/forgot-password');
+                        },
+                        child: const Text(
+                          "Lupa kata sandi?",
+                          style: TextStyle(
+                            color: Colors.grey, // Warna teksnya abu-abu
+                            fontSize: 12, 
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+
                     const SizedBox(height: 24.0),
 
-                    // Tombol Login Manual
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(

@@ -30,25 +30,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadProfileData() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _nameController.text = prefs.getString("nama_customer") ?? "";
-      _emailController.text = prefs.getString("email_customer") ?? "";
-      
-      String? fotoPath = prefs.getString("foto");
-      if (fotoPath != null && fotoPath.isNotEmpty) {
-        // CEK: Apakah fotonya udah full URL (misal dari Google)?
-        if (fotoPath.startsWith('http')) {
-          _photoUrl = fotoPath; // Langsung pake URL itu
-        } else {
-          // Kalau path lokal (dari upload), baru tambahin domain Hostinger
-          _photoUrl = "https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/$fotoPath";
-        }
+  final prefs = await SharedPreferences.getInstance();
+  
+  // Ambil apa adanya dari SharedPreferences
+  String? pathDariDB = prefs.getString("foto"); 
+
+  setState(() {
+    _nameController.text = prefs.getString("nama_customer") ?? "";
+    _emailController.text = prefs.getString("email_customer") ?? "";
+
+    if (pathDariDB != null && pathDariDB.isNotEmpty) {
+      if (pathDariDB.startsWith('http')) {
+        _photoUrl = pathDariDB; 
       } else {
-        _photoUrl = null;
+        // PERHATIKAN: Langsung tempel domain + pathDariDB
+        // Karena pathDariDB isinya udah "uploads/1776676472_..."
+        _photoUrl = "https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/$pathDariDB";
       }
-    });
-  }
+      print("HASIL URL FINAL: $_photoUrl"); // Cek link ini di console VS Code
+    } else {
+      _photoUrl = null;
+    }
+  });
+}
 
   // ==========================================
   // LOGIKA SISTEM FOTO PROFIL (PICK, CROP, UPLOAD)

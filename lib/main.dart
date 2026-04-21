@@ -1,24 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart'; // Import ini wajib
-import 'package:nganjukabirupa/main_navigation.dart';
-import 'firebase_options.dart'; // Import ini wajib (hasil dari flutterfire configure)
+import 'package:firebase_core/firebase_core.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'firebase_options.dart'; 
 
-// Import fitur lu
+// Import fitur-fitur lu
+import 'package:nganjukabirupa/features/auth/forgot_password_success_screen.dart';
+import 'package:nganjukabirupa/features/auth/set_new_password_screen.dart';
+import 'package:nganjukabirupa/main_navigation.dart';
 import 'features/splash/splash_screen.dart';
 import 'features/auth/register_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/dashboard/tambah_review_screen.dart';
 import 'features/dashboard/profile_screen.dart';
+import 'features/auth/forgot_password_screen.dart';
+import 'features/auth/verify_code_screen.dart';
 
 void main() async {
-  // 1. WAJIB: Pastikan Flutter binding siap sebelum manggil Firebase
   WidgetsFlutterBinding.ensureInitialized();
   
-  // 2. WAJIB: Inisialisasi Firebase dengan konfigurasi platform yang sesuai
+  // 1. Inisialisasi Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  // Langsung jalankan MyApp tanpa perlu oper routeAwal
   runApp(const MyApp());
 }
 
@@ -30,22 +35,24 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Nganjuk Abirupa',
       debugShowCheckedModeBanner: false,
-      
       theme: ThemeData(
         primarySwatch: Colors.blue,
         fontFamily: 'Poppins',
       ),
       
-      initialRoute: '/', // Pas app dibuka, langsung lari ke route '/' (Splash Screen)
+      // SELALU mulai dari Splash Screen
+      initialRoute: '/', 
+      
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
-        
-        // 👇 PENTING: '/dashboard' sekarang ngarah ke si Induk (MainNavigation)
+        '/forgot-password': (context) => const ForgotPasswordScreen(),
+        '/verify-code': (context) => const VerifyCodeScreen(),
+        '/set-new-password': (context) => const SetNewPasswordScreen(),
+        '/forgot-password-success': (context) => const ForgotPasswordSuccessScreen(),
         '/dashboard': (context) => const MainNavigation(), 
-        
-        '/riwayat': (context) => const MainNavigation(initialIndex: 1), // Ngarah ke tab Riwayat
+        '/riwayat': (context) => const MainNavigation(initialIndex: 1),
         '/tambah_review': (context) => const TambahReviewScreen(),
         '/profile': (context) => const ProfileScreen(),
       },

@@ -54,6 +54,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _handleRegister() async {
+    // BARIS INI YANG TADI KEMUNGKINAN KEHAPUS
     String name = _nameController.text.trim();
     String email = _emailController.text.trim();
     String phone = _phoneController.text.trim();
@@ -95,7 +96,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       var url = Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/apimobile/register.php');
       
-      // KIRIM SEBAGAI JSON
       var response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
@@ -107,6 +107,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }),
       );
 
+      // --- INI PRINT BUAT NYARI TAU ERROR SERVERNYA APA ---
+      print("STATUS CODE: ${response.statusCode}");
+      print("RESPONSE BODY: ${response.body}");
+      // ----------------------------------------------------
+
       if (response.statusCode == 200) {
         var res = jsonDecode(response.body);
         if (!mounted) return;
@@ -117,9 +122,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? "Registrasi Gagal!")));
         }
+      } else {
+        // TAMPILIN ERROR KALAU SERVER PHP NYA CRASH
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error Server: ${response.statusCode}"), backgroundColor: Colors.red));
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Gagal terhubung ke server!"), backgroundColor: Colors.red));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal terhubung ke server! Error: $e"), backgroundColor: Colors.red));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // <--- WAJIB IMPORT FIREBASE AUTH
-import '../../core/app_colors.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/app_colors.dart'; // Pastikan path ini bener sesuai folder lu
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -10,14 +10,8 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  // --- HAPUS KATA 'final' DISINI ---
-  // Biar nilainya bisa kita update setelah ngecek ke Firebase
-  bool _isLoggedIn = false; 
+  // Variabel buat animasi fade-in
   bool _isVisible = false;
-
-  static const _splashDurationMs = 2000;
-  static const _fadeInDurationMs = _splashDurationMs ~/ 2;
-  // -------------------------------------------
 
   @override
   void initState() {
@@ -26,34 +20,32 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _startSplashLogic() async {
-    // 1. Mulai animasi fade-in
+    // 1. Kasih jeda dikit biar build selesai baru animasi jalan
     await Future.delayed(const Duration(milliseconds: 100));
     if (mounted) {
       setState(() {
-        _isVisible = true; // Mengubah opacity jadi 1.0
+        _isVisible = true; // Jalankan animasi logo muncul
       });
     }
 
-    // 2. CEK SESSION LOGIN DI FIREBASE
-    // Kita cek apakah ada user yang sedang nyantol di HP ini
-    User? currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser != null) {
-      _isLoggedIn = true; // Kalau ada, set true
-    } else {
-      _isLoggedIn = false; // Kalau kosong, set false
-    }
+    // 2. Tunggu logo mejeng sebentar (misal total 3 detik dari awal)
+    await Future.delayed(const Duration(seconds: 3));
 
-    // 3. Tunggu sisa durasi splash screen (2 detik) biar logo tetap nongol
-    await Future.delayed(const Duration(milliseconds: _splashDurationMs));
+    // 3. CEK SESSION (Logika paling sakti biar gak kedap-kedip)
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Ambil email_customer (kunci yang lu pake di LoginScreen)
+    String? email = prefs.getString('email_customer');
 
-    // 4. Navigasi
     if (!mounted) return;
 
-    if (_isLoggedIn) {
-      // Langsung gas ke Dashboard kalau udah login
+    // 4. Navigasi Final
+    if (email != null && email.isNotEmpty) {
+      // Kalau ada data email, berarti user sudah login (Manual/Google)
+      // Gunakan pushReplacementNamed biar halaman Splash dihapus dari memory
       Navigator.pushReplacementNamed(context, '/dashboard');
     } else {
-      // Lempar ke Login kalau belum
+      // Kalau data kosong, lempar ke Login
       Navigator.pushReplacementNamed(context, '/login');
     }
   }
@@ -62,7 +54,8 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        padding: const EdgeInsets.all(32.0),
+        width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -75,43 +68,43 @@ class _SplashScreenState extends State<SplashScreen> {
           ),
         ),
         child: Stack(
+          alignment: Alignment.center,
           children: [
-            // Logo Tengah
-            Align(
-              alignment: Alignment.center,
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: _fadeInDurationMs),
-                opacity: _isVisible ? 1.0 : 0.0,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: 250.0,
-                    maxHeight: 250.0,
-                  ),
-                  child: Image.asset(
+            // Logo Utama (Tengah)
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 1200),
+              opacity: _isVisible ? 1.0 : 0.0,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
                     'assets/images/logo_awal.png',
+                    width: 180,
                     fit: BoxFit.contain,
                   ),
-                ),
-              ),
-            ),
-            // Teks Branding Bawah
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: _fadeInDurationMs),
-                opacity: _isVisible ? 1.0 : 0.0,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 24.0),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxWidth: 300.0,
-                      maxHeight: 80.0,
-                    ),
-                    child: Image.asset(
-                      'assets/images/logo_awal2.png',
-                      fit: BoxFit.contain,
+                  const SizedBox(height: 20),
+                  // Opsional: Tambahin loading indicator kecil biar estetik
+                  const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
                     ),
                   ),
+                ],
+              ),
+            ),
+            // Logo Branding (Bawah)
+            Positioned(
+              bottom: 40,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 1500),
+                opacity: _isVisible ? 1.0 : 0.0,
+                child: Image.asset(
+                  'assets/images/logo_awal2.png',
+                  width: 150,
+                  fit: BoxFit.contain,
                 ),
               ),
             ),
