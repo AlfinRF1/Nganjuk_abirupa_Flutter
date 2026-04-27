@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:nganjukabirupa/features/AI/ai_services.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+
+// 1. PINDAHIN KE SINI BRE! (Di luar class apapun)
+// Karena ada di luar, datanya nggak bakal keriset walaupun modalnya ditutup.
+List<Map<String, String>> chatHistory = [
+  {"role": "ai", "text": "Halo! Mau tanya apa soal wisata Nganjuk?"}
+];
 
 class ChatAiModal extends StatefulWidget {
   const ChatAiModal({super.key});
@@ -10,25 +17,26 @@ class ChatAiModal extends StatefulWidget {
 
 class _ChatAiModalState extends State<ChatAiModal> {
   final TextEditingController _controller = TextEditingController();
-  String _jawaban = "Halo! Mau tanya apa soal wisata Nganjuk?";
   bool _isLoading = false;
 
   void _kirimPesan() async {
     if (_controller.text.trim().isEmpty) return; 
 
-    // Simpan teksnya dulu, terus hapus inputannya biar berasa kayak chat beneran
     String pesanUser = _controller.text;
     _controller.clear(); 
 
-    setState(() => _isLoading = true);
+    setState(() {
+      // 2. GANTI NAMA VARIABELNYA JADI chatHistory
+      chatHistory.add({"role": "user", "text": pesanUser});
+      _isLoading = true;
+    });
     
-    // Kita panggil service AI. 
-    // Apapun hasilnya (sukses/error), service kita sekarang return-nya String.
-    String hasil = await AiService.tanyaWisata(pesanUser);
+    String hasil = await AiService.tanyaWisata(pesanUser); // Opsional: masukin list database lu di sini kalau jadi pake teknik RAG
 
     if (mounted) {
       setState(() {
-        _jawaban = hasil;
+        // 3. GANTI NAMA VARIABELNYA JADI chatHistory
+        chatHistory.add({"role": "ai", "text": hasil});
         _isLoading = false;
       });
     }
@@ -37,30 +45,72 @@ class _ChatAiModalState extends State<ChatAiModal> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // Tambahin padding bawah biar nggak ketutup keyboard
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 20, 
-        top: 20, left: 20, right: 20
+        top: 20, left: 15, right: 15
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text("Asisten Wisata AI", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           const SizedBox(height: 10),
-          // Scrollable area buat jawaban yang panjang
+          
+          // 4. KITA GANTI JADI LISTVIEW BIAR BISA SCROLL HISTORY
           Container(
-            constraints: const BoxConstraints(maxHeight: 200),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(10)),
-            child: SingleChildScrollView(
-              child: Text(_isLoading ? "AI lagi mikir..." : _jawaban),
+            constraints: const BoxConstraints(maxHeight: 350), // Tingginya gue tambahin biar enak baca chatnya
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(10)),
+            child: ListView.builder(
+              itemCount: chatHistory.length,
+              itemBuilder: (context, index) {
+                final msg = chatHistory[index];
+                final isUser = msg["role"] == "user";
+
+                // 5. BIKIN BALON CHAT (Kanan User, Kiri AI)
+                return Align(
+                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 5),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isUser ? Colors.teal[100] : Colors.white, // Warna beda biar ketahuan siapa yang ngomong
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: Colors.grey[300]!),
+                    ),
+                    // Kalau User pake Text biasa, kalau AI pake MarkdownBody
+                    child: isUser 
+                      ? Text(msg["text"]!, style: const TextStyle(fontSize: 15))
+                      : MarkdownBody(data: msg["text"]!, selectable: true),
+                  ),
+                );
+              },
             ),
           ),
-          TextField(controller: _controller, decoration: const InputDecoration(hintText: "Tanya sesuatu...")),
+          
+          // Kalau lagi loading, kasih tulisan kecil di bawah
+          if (_isLoading) 
+            const Padding(
+              padding: EdgeInsets.only(top: 8.0),
+              child: Text("AI lagi ngetik...", style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
+            ),
+
           const SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: _isLoading ? null : _kirimPesan, // Disable tombol saat loading
-            child: const Text("Kirim"),
+          TextField(
+            controller: _controller, 
+            decoration: const InputDecoration(
+              hintText: "Tanya sesuatu...",
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+            )
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white),
+              onPressed: _isLoading ? null : _kirimPesan,
+              child: const Text("Kirim"),
+            ),
           ),
         ],
       ),

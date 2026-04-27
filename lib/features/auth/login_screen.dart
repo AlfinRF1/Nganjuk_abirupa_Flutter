@@ -93,12 +93,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-  
-
-  // 2. Logic Login Google
-  
-
-
 // 2. Update _loginWithGoogle jadi seperti ini
 Future<void> _loginWithGoogle() async {
   setState(() => _isLoading = true);

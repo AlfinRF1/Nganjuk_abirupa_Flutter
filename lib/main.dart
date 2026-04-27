@@ -19,12 +19,17 @@ import 'features/auth/verify_code_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  try {
+    await dotenv.load(fileName: ".env");
+    print("DEBUG: .env berhasil di-load!");
+  } catch (e) {
+    print("DEBUG: Gagal load .env -> $e");
+  }
+  
   // 1. Inisialisasi Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
-  await dotenv.load(fileName: ".env");
 
   // Langsung jalankan MyApp tanpa perlu oper routeAwal
   runApp(const MyApp());

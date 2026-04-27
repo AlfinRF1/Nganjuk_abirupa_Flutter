@@ -44,11 +44,26 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
         if (res['success'] == true) {
           setState(() {
             _listReviews = (res['data'] as List).map((item) {
+              
+              // 1. Ambil path foto dari database (Asumsi nama kolomnya 'foto' sesuai Profile)
+              String pathDariDB = item['foto']?.toString() ?? ""; 
+              String urlFoto = "";
+
+              // 2. Logika persis kayak di _loadProfileData
+              if (pathDariDB.isNotEmpty && pathDariDB != "null") {
+                if (pathDariDB.startsWith('http')) {
+                  urlFoto = pathDariDB; // URL dari Google Sign-In
+                } else {
+                  // Tempel domain + path (karena path isinya "uploads/...")
+                  urlFoto = "https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/$pathDariDB";
+                }
+              }
+
               return {
                 "name": item['nama_customer'].toString(),
                 "date": item['tanggal'].toString(),
                 "text": item['ulasan'].toString(),
-                "avatar": "https://i.pravatar.cc/100?img=1"
+                "avatar": urlFoto, // Bakal isi URL lengkap atau string kosong ("")
               };
             }).toList();
           });
@@ -304,7 +319,14 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(backgroundImage: NetworkImage(avatarUrl), radius: 16),
+          CircleAvatar(
+          radius: 16,
+          backgroundColor: Colors.grey.shade300,
+          // Kalau string gak kosong, load gambarnya. Kalau kosong, null (gak load gambar)
+          backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+          // Kalau string kosong, tampilin icon orang warna abu-abu
+          child: avatarUrl.isEmpty ? const Icon(Icons.person, size: 20, color: Colors.grey) : null,
+        ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
