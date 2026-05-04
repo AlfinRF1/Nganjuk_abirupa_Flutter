@@ -91,7 +91,7 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
           color: Colors.white,
           child: ElevatedButton(
             onPressed: () {
-              // 👇 UDAH DISESUAIKAN 100% SAMA WISATAMODEL LU
+              // UDAH DISESUAIKAN 100% SAMA WISATAMODEL
               Navigator.push(
                 context,
                 MaterialPageRoute(

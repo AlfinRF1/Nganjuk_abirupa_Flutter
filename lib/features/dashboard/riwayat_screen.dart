@@ -158,6 +158,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
                       showModalBottomSheet(
                         context: context,
+                        isScrollControlled: true,
                         builder: (c) => FilterModal(
                           onApply: _filterData,
                           daftarWisata: wisataUnik,

@@ -11,7 +11,6 @@ class DetailRiwayatBottomSheet extends StatelessWidget {
     required this.namaCustomer,
   });
 
-  // 1. Fungsi buat warna status
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'selesai': return Colors.green;
@@ -24,9 +23,7 @@ class DetailRiwayatBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final currencyFormat = NumberFormat.currency(locale: 'id', symbol: '', decimalDigits: 0);
 
-    // 2. Logika Status
     String rawStatus = data['status'].toString();
-    // Kalau ada tanggal, bisa dimasukin ke logika sini kalau mau
     String finalStatus = rawStatus; 
 
     String tglFormatted = "-";
@@ -37,19 +34,24 @@ class DetailRiwayatBottomSheet extends StatelessWidget {
       tglFormatted = data['tanggal'].toString();
     }
 
+    // 1. AMBIL TINGGI LAYAR HP
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return Container(
+      // 2. KITA SET TINGGINYA 75% DARI LAYAR (Biar langsung ngebuka tinggi!)
+      height: screenHeight * 0.75, 
       padding: const EdgeInsets.all(24),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
+          // --- HANDLE ---
           Container(width: 50, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10))),
           const SizedBox(height: 24),
 
-          // Header
+          // --- HEADER ---
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -59,7 +61,7 @@ class DetailRiwayatBottomSheet extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // Resi Card
+          // --- KONTEN TENGAH (RESI CARD) ---
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -79,7 +81,6 @@ class DetailRiwayatBottomSheet extends StatelessWidget {
                 _buildRowDetail("ID Transaksi", "#TX${data['id_transaksi']}"),
                 _buildRowDetail("Tanggal", tglFormatted),
                 
-                // 3. BARIS STATUS DENGAN WARNA
                 Padding(
                   padding: const EdgeInsets.only(bottom: 6.0),
                   child: Row(
@@ -110,9 +111,12 @@ class DetailRiwayatBottomSheet extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          
+          // 3. PENDORONG AJAIB (SPACER)
+          // Ini bakal ngisi sisa ruang kosong di tengah dan ngedorong footer ke bawah!
+          const Spacer(),
 
-          // Footer (Satu aja biar nggak double)
+          // --- FOOTER ---
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -126,7 +130,7 @@ class DetailRiwayatBottomSheet extends StatelessWidget {
                 ],
               ),
             ],
-          )
+          ),
         ],
       ),
     );
