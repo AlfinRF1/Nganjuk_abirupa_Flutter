@@ -78,7 +78,6 @@ class _LoginScreenState extends State<LoginScreen> {
           res['email_customer'],
           res['foto'], // Pakai res['foto'], JANGAN 'null' lagi bre!
         );
-        // -------------------------
 
         if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/dashboard');
