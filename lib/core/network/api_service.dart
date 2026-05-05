@@ -10,21 +10,55 @@ class ApiService {
   ApiService()
       : _dio = Dio(
           BaseOptions(
-            // Ganti 192.168.X.X dengan IP WiFi lu (jangan lupa akhiri dengan '/')
-            baseUrl: 'https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/apimobile/', 
-            connectTimeout: const Duration(seconds: 10), // Maksimal nunggu koneksi 10 detik
-            receiveTimeout: const Duration(seconds: 10), // Maksimal nunggu respon 10 detik
+            // ✅ UBAH: Gunakan 10.0.2.2 jika pakai Emulator Android
+            // Jika pakai HP asli via kabel/WiFi, ganti dengan IP laptop lu (misal: http://192.168.1.15:8000/api/)
+            baseUrl: 'http://172.16.103.79:8000/api/', // 
+            connectTimeout: const Duration(seconds: 10), 
+            receiveTimeout: const Duration(seconds: 10), 
             responseType: ResponseType.json,
           ),
         );
 
+// lib/network/api_service.dart
+
+// Tambahkan fungsi login
+Future<Map<String, dynamic>> login(String nama, String password) async {
+  try {
+    final response = await _dio.post("login", data: {
+      "nama_customer": nama,
+      "password_customer": password,
+    });
+
+    if (response.data['success'] == true) {
+      // Simpan token di sini jika perlu (pakai shared_preferences)
+      return response.data; 
+    } else {
+      throw Exception(response.data['message']);
+    }
+  } on DioException catch (e) {
+    throw Exception(e.response?.data['message'] ?? "Gagal Login");
+  }
+}
+
+// Fungsi Logout (Butuh Token)
+Future<void> logout(String token) async {
+  try {
+    await _dio.post("logout", 
+      options: Options(headers: {"Authorization": "Bearer $token"})
+    );
+  } catch (e) {
+    throw Exception("Gagal Logout");
+  }
+}
   // ==========================================
-  // 1. FITUR REGISTRASI (Dari kode lu sebelumnya)
+  // 1. FITUR REGISTRASI
   // ==========================================
   Future<RegisterResponse> register(RegisterRequest request) async {
     try {
-      final response = await _dio.post("register.php", data: request.toJson());
-      // Dio otomatis mengubah JSON jadi Map, jadi langsung masukin aja
+      // ✅ UBAH: Hilangkan ".php". Sesuaikan dengan route di routes/api.php Laravel lu
+      // Misal di Laravel: Route::post('/register', [AuthController::class, 'register']);
+      final response = await _dio.post("register", data: request.toJson());
+      
       return RegisterResponse.fromJson(response.data);
     } on DioException catch (e) {
       throw Exception("Gagal registrasi (Jaringan): ${e.message}");
@@ -38,11 +72,10 @@ class ApiService {
   // ==========================================
   Future<List<WisataModel>> getAllWisata() async {
     try {
-      // Tinggal panggil nama filenya aja, karena baseUrl udah diset di atas
-      final response = await _dio.get("get_all_wisata.php");
+      // ✅ UBAH: Dari "get_all_wisata.php" menjadi "wisata" aja
+      final response = await _dio.get("wisata");
 
       if (response.statusCode == 200) {
-        // Dio otomatis merubah response jadi Map<String, dynamic>
         final Map<String, dynamic> jsonResponse = response.data;
 
         if (jsonResponse['status'] == 'success') {

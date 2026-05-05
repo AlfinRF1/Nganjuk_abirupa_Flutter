@@ -238,42 +238,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // -------------------------------------------
             },
             child: Row(
-              children: [
-                // GAMBAR WISATA
-                ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(12),
-                      bottomLeft: Radius.circular(12)),
-                  child: wisata.gambar.isEmpty
-                      ? Container(
-                          width: 100, height: 100, color: Colors.grey[300],
-                          child: const Icon(Icons.image_not_supported, color: Colors.grey),
-                        )
-                      : wisata.isLocalImage
-                          ? Image.asset(
-                              wisata.gambar,
-                              width: 100,
-                              height: 100,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  width: 100, height: 100, color: Colors.grey[300],
-                                  child: const Icon(Icons.broken_image, color: Colors.grey),
-                                );
-                              },
-                            )
-                          : CachedNetworkImage(
-                              imageUrl: wisata.gambar,
-                              width: 100,
-                              height: 100,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => Container(color: Colors.grey[300]),
-                              errorWidget: (context, url, error) => Container(
-                                width: 100, height: 100, color: Colors.grey[300],
-                                child: const Icon(Icons.wifi_off, color: Colors.grey),
-                              ),
-                            ),
+  children: [
+    // GAMBAR WISATA
+    ClipRRect(
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(12),
+        bottomLeft: Radius.circular(12),
+      ),
+      child: wisata.gambar.isEmpty
+          ? Container(
+              width: 100, 
+              height: 100, 
+              color: Colors.grey[300],
+              child: const Icon(Icons.image_not_supported, color: Colors.grey),
+            )
+          : CachedNetworkImage(
+              imageUrl: wisata.gambar,
+              width: 100,
+              height: 100,
+              fit: BoxFit.cover,
+              // Biar gak cuma kotak abu-abu, kita kasih loading spinner kecil
+              placeholder: (context, url) => Container(
+                width: 100, 
+                height: 100, 
+                color: Colors.grey[300],
+                child: const Center(
+                  child: SizedBox(
+                    width: 20, 
+                    height: 20, 
+                    child: CircularProgressIndicator(color: Colors.green, strokeWidth: 2),
+                  ),
                 ),
+              ),
+              // Tampilan kalau link gambarnya mati atau koneksi error
+              errorWidget: (context, url, error) => Container(
+                width: 100, 
+                height: 100, 
+                color: Colors.grey[300],
+                child: const Icon(Icons.broken_image, color: Colors.grey),
+              ),
+            ),
+    ),
+    
+    // ... Lanjut ke elemen Row berikutnya (Teks Nama Wisata, dll) ...
                 const SizedBox(width: 12),
                 
                 // TEKS DETAIL

@@ -350,19 +350,32 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
   }
 
   Widget _buildHeaderImage() {
-    // Ingat! Karena sekarang Stateful, kita panggil wisatanya pakai widget.wisata
-    if (widget.wisata.gambar.isEmpty) {
-      return Container(color: Colors.grey[300], child: const Icon(Icons.image_not_supported, size: 50));
-    }
-    if (widget.wisata.isLocalImage) {
-      return Image.asset(widget.wisata.gambar, fit: BoxFit.cover, width: double.infinity, height: double.infinity,
-        errorBuilder: (context, error, stackTrace) => Container(color: Colors.grey[300], child: const Icon(Icons.broken_image)));
-    } else {
-      return CachedNetworkImage(
-        imageUrl: widget.wisata.gambar, fit: BoxFit.cover, width: double.infinity, height: double.infinity,
-        placeholder: (context, url) => Container(color: Colors.grey[300]),
-        errorWidget: (context, url, error) => Container(color: Colors.grey[300], child: const Icon(Icons.broken_image)),
-      );
-    }
+  // Cek kalau gambar kosong dari API
+  if (widget.wisata.gambar.isEmpty) {
+    return Container(
+      color: Colors.grey[300], 
+      child: const Icon(Icons.image_not_supported, size: 50)
+    );
   }
+
+  // Langsung pakai CachedNetworkImage untuk semua wisata
+  return CachedNetworkImage(
+    imageUrl: widget.wisata.gambar, 
+    fit: BoxFit.cover, 
+    width: double.infinity, 
+    height: double.infinity,
+    // Biar gak cuma abu-abu doang, kita kasih loading spinner pas gambar lagi didownload
+    placeholder: (context, url) => Container(
+      color: Colors.grey[300],
+      child: const Center(
+        child: CircularProgressIndicator(color: Colors.green),
+      ),
+    ),
+    // Tampilan kalau link gambarnya mati atau koneksi error
+    errorWidget: (context, url, error) => Container(
+      color: Colors.grey[300], 
+      child: const Icon(Icons.broken_image, size: 50, color: Colors.grey)
+    ),
+  );
+}
 }
