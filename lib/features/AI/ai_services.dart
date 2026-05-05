@@ -13,7 +13,7 @@ class AiService {
       
       // Tambahin timeout biar dia gak panik kalau server agak lemot
       final response = await model.generateContent([
-        Content.text("Lu adalah asisten wisata Nganjuk Abirupa. User tanya: $pertanyaan")
+        Content.text("Kamu adalah asisten wisata Nganjuk Abirupa. User tanya: $pertanyaan")
       ]).timeout(const Duration(seconds: 15)); // Sabar nunggu 15 detik
       
       return response.text ?? "AI-nya lagi bengong...";
@@ -21,9 +21,9 @@ class AiService {
       print("ERROR DETAILED: $e");
       // Kalau 503 (High Demand), kasih tau user buat coba lagi
       if (e.toString().contains('503')) {
-        return "Server AI lagi penuh banget nih bre, coba klik Kirim sekali lagi ya!";
+        return "Server AI lagi penuh, silahkan Kirim sekali lagi!";
       }
-      return "Koneksi gagal. Cek internet lu atau coba lagi bentar lagi.";
+      return "Koneksi gagal. Cek internet kamu atau coba lagi.";
     }
   }
 }
