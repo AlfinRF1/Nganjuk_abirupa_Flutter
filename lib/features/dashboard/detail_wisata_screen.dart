@@ -18,14 +18,43 @@ class DetailWisataScreen extends StatefulWidget {
 
 class _DetailWisataScreenState extends State<DetailWisataScreen> {
   String namaUserLogin = "Pengguna";
-  List<Map<String, String>> _listReviews = []; // Sudah dikosongkan karena nanti diisi API
+  List<dynamic> _listReviews = []; // Sudah dikosongkan karena nanti diisi API
+
+bool _isLoading = true;
+late WisataModel _detailWisata;
 
   @override
-  void initState() {
-    super.initState();
-    _ambilDataUser();
-    _fetchReviews();
+void initState() {
+  super.initState();
+  _detailWisata = widget.wisata; // Isi awal pakai data dari Beranda dulu
+  _ambilDataUser();
+  _fetchDetailWisata(); // <--- Panggil fungsi fetch detail
+  _fetchReviews();
+}
+
+Future<void> _fetchDetailWisata() async {
+  try {
+    // 1. GANTI IP KE IP LAPTOP LU (Contoh: 192.168.1.15)
+    final String ipLaptop = "172.16.103.79"; 
+    
+    final response = await http.get(Uri.parse(
+        'http://$ipLaptop:8000/api/wisata/${widget.wisata.idWisata}'));
+    
+    if (response.statusCode == 200) {
+      var res = jsonDecode(response.body);
+      if (res['status'] == 'success') {
+        setState(() {
+          // Mapping data ke model yang baru (yang ada List<EventModel>)[cite: 5, 6]
+          _detailWisata = WisataModel.fromJson(res['data']);
+          _isLoading = false;
+        });
+      }
+    }
+  } catch (e) {
+    debugPrint("Koneksi Error: $e");
+    setState(() => _isLoading = false);
   }
+}
 
   Future<void> _ambilDataUser() async {
     final prefs = await SharedPreferences.getInstance();
@@ -35,44 +64,29 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
   }
 
   Future<void> _fetchReviews() async {
-    try {
-      final response = await http.get(Uri.parse(
-          'https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/apimobile/get_ulasan.php?id_wisata=${widget.wisata.idWisata}'));
+  try {
+    var response = await http.get(
+      Uri.parse('http://172.16.103.79:8000/api/wisata/${widget.wisata.idWisata}'),
+      headers: {"Accept": "application/json"},
+    );
+
+    if (response.statusCode == 200) {
+      var res = jsonDecode(response.body);
       
-      if (response.statusCode == 200) {
-        var res = jsonDecode(response.body);
-        if (res['success'] == true) {
-          setState(() {
-            _listReviews = (res['data'] as List).map((item) {
-              
-              // 1. Ambil path foto dari database (Asumsi nama kolomnya 'foto' sesuai Profile)
-              String pathDariDB = item['foto']?.toString() ?? ""; 
-              String urlFoto = "";
-
-              // 2. Logika persis kayak di _loadProfileData
-              if (pathDariDB.isNotEmpty && pathDariDB != "null") {
-                if (pathDariDB.startsWith('http')) {
-                  urlFoto = pathDariDB; // URL dari Google Sign-In
-                } else {
-                  // Tempel domain + path (karena path isinya "uploads/...")
-                  urlFoto = "https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/$pathDariDB";
-                }
-              }
-
-              return {
-                "name": item['nama_customer'].toString(),
-                "date": item['tanggal'].toString(),
-                "text": item['ulasan'].toString(),
-                "avatar": urlFoto, // Bakal isi URL lengkap atau string kosong ("")
-              };
-            }).toList();
-          });
-        }
-      }
-    } catch (e) {
-      print("Error ambil review: $e");
+      // Masuk ke dalam 'data' dulu
+      var dataUtama = res['data'] ?? {};
+      
+      setState(() {
+        // Langsung hajar masukin ke variabel, gak perlu pakai .cast() lagi
+        _listReviews = dataUtama['ulasan'] ?? []; 
+      });
+      
+      debugPrint("JUMLAH REVIEW DITEMUKAN: ${_listReviews.length}");
     }
+  } catch (e) {
+    debugPrint("ERROR REFRESH REVIEWS: $e");
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -198,94 +212,180 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
   }
 
   Widget _buildEventTab() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: const Center(
-          child: Text("Belum ada event di wisata ini.", style: TextStyle(color: Colors.grey)),
-        ),
-      ),
+  // Pakai _detailWisata yang datanya baru saja kita ambil dari API Detail
+  if (_detailWisata.events.isEmpty) {
+    return const Center(
+      child: Text("Belum ada event di wisata ini.", style: TextStyle(color: Colors.grey)),
     );
   }
+
+  return ListView.builder(
+  padding: const EdgeInsets.all(16),
+  itemCount: _detailWisata.events.length,
+  itemBuilder: (context, index) {
+    final event = _detailWisata.events[index];
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start, // Biar teks rata kiri
+        children: [
+          // GAMBAR POSTER (Sudah diperbaiki agar tidak kepotong)
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+            child: CachedNetworkImage(
+              imageUrl: event.gambarPoster,
+              width: double.infinity,
+              // Hapus 'height: 180' agar mengikuti panjang asli gambar
+              fit: BoxFit.fitWidth, // Menyesuaikan lebar tanpa memotong tinggi
+              placeholder: (context, url) => Container(
+                height: 200, // Tinggi sementara saat loading
+                color: Colors.grey[200],
+                child: const Center(child: CircularProgressIndicator(color: Color(0xFF0BB5A7))),
+              ),
+              errorWidget: (context, url, error) => Container(
+                height: 150,
+                color: Colors.grey[100],
+                child: const Icon(Icons.broken_image, color: Colors.grey, size: 40),
+              ),
+            ),
+          ),
+          
+          // INFO TANGGAL EVENT
+          Padding(
+            padding: const EdgeInsets.all(15),
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_today_rounded, size: 18, color: Color(0xFF0BB5A7)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    "Event: ${event.tglMulai} s/d ${event.tglSelesai}",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Color(0xFF4e4e4e),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  },
+);
+}
 
   // --- 3. LOGIKA TAMBAH REVIEW OTOMATIS ---
   Widget _buildReviewsTab(BuildContext context, Color cardColor, Color textColor) { 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        InkWell(
-          borderRadius: BorderRadius.circular(25),
-          onTap: () async {
-            final hasilReview = await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const TambahReviewScreen()),
+  return ListView(
+    padding: const EdgeInsets.all(16),
+    children: [
+      // TOMBOL TULIS REVIEW
+      InkWell(
+        borderRadius: BorderRadius.circular(25),
+        onTap: () async {
+          final hasilReview = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const TambahReviewScreen()),
+          );
+
+          if (hasilReview != null && hasilReview.toString().isNotEmpty) {
+            // 1. TAMPILIN LOADING DIALOG
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) => const Center(
+                child: CircularProgressIndicator(color: Color(0xFF0BB5A7)),
+              ),
             );
 
-            if (hasilReview != null && hasilReview.toString().isNotEmpty) {
-              // 1. TAMPILIN LOADING DIALOG
-              showDialog(
-                context: context,
-                barrierDismissible: false, // User nggak bisa nutup dialog dengan klik luar
-                builder: (context) => const Center(
-                  child: CircularProgressIndicator(color: Color(0xFF0BB5A7)),
-                ),
+            try {
+              final prefs = await SharedPreferences.getInstance();
+              String idCustomer = prefs.getString("id_customer") ?? "0";
+
+              // 2. PINDAH KE URL LARAVEL LOKAL
+              var response = await http.post(
+                Uri.parse('http://172.16.103.79:8000/api/ulasan'), // Sesuaikan route di Laravel
+                headers: {
+                  "Content-Type": "application/json",
+                  "Accept": "application/json",
+                },
+                body: jsonEncode({
+                  "id_wisata": widget.wisata.idWisata,
+                  "id_customer": idCustomer,
+                  "ulasan": hasilReview // Sesuai nama kolom di DB lu
+                }),
               );
 
-              try {
-                final prefs = await SharedPreferences.getInstance();
-                String idCustomer = prefs.getString("id_customer") ?? "0";
+              if (mounted) Navigator.pop(context); // NUTUP LOADING
 
-                var response = await http.post(
-                  Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/apimobile/ulasan_wisata.php'),
-                  headers: {"Content-Type": "application/json"},
-                  body: jsonEncode({
-                    "id_wisata": widget.wisata.idWisata,
-                    "id_customer": idCustomer,
-                    "ulasan": hasilReview
-                  }),
-                );
-
-                // 2. NUTUP LOADING DIALOG
-                if (mounted) Navigator.pop(context);
-
-                if (response.statusCode == 200) {
-                  await _fetchReviews(); // Tunggu data baru kesedot
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Review berhasil diposting!')),
-                    );
-                  }
-                }
-              } catch (e) {
-                // 2. NUTUP LOADING DIALOG JIKA ERROR
-                if (mounted) Navigator.pop(context);
+              if (response.statusCode == 200 || response.statusCode == 201) {
+                await _fetchReviews(); // Refresh data ulasan
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Gagal posting: $e')),
+                    const SnackBar(content: Text('Review berhasil diposting!'), backgroundColor: Colors.green),
                   );
                 }
+              } else {
+                debugPrint("Gagal posting review: ${response.body}");
+              }
+            } catch (e) {
+              if (mounted) Navigator.pop(context); // NUTUP LOADING JIKA ERROR
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Gagal terhubung ke server: $e'), backgroundColor: Colors.red),
+                );
               }
             }
-          },
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(25), border: Border.all(color: Colors.grey.shade300)),
-            child: const Text("Tulis Review di sini", style: TextStyle(color: Colors.grey)),
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white, 
+            borderRadius: BorderRadius.circular(25), 
+            border: Border.all(color: Colors.grey.shade300)
           ),
+          child: const Text("Tulis Review di sini", style: TextStyle(color: Colors.grey)),
         ),
-        const SizedBox(height: 16),
-        ..._listReviews.map((review) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: _buildReviewCard(cardColor, textColor, review["name"]!, review["date"]!, review["text"]!, review["avatar"]!),
-        )),
-      ],
-    );
-  }
+      ),
+      const SizedBox(height: 16),
+
+      ..._listReviews.map((review) {
+  // 1. Definisikan dataReview dengan tipe yang jelas agar operator [] bisa dipakai
+  final Map<String, dynamic> dataReview = review as Map<String, dynamic>; 
+  
+  // 2. Ambil data customer, casting juga sebagai Map
+  final Map<String, dynamic> customer = (dataReview["customer"] ?? {}) as Map<String, dynamic>;
+  
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: _buildReviewCard(
+      cardColor, 
+      textColor, 
+      customer["nama_customer"]?.toString() ?? "Anonim",
+      dataReview["tanggal"]?.toString() ?? "-",
+      dataReview["ulasan"]?.toString() ?? "",
+      customer["foto"]?.toString() ?? ""
+    ),
+  );
+}).toList(),
+    ],
+  );
+}
 
 
   Widget _buildInfoCard(Color bgColor, Color textColor, IconData icon, String title, String content) {

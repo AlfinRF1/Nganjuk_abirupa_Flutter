@@ -22,9 +22,10 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false; // Fix undefined _isPasswordVisible
 
   // Key untuk SharedPreferences
+  static const String _keyToken = "token"; // Tambahin ini bre
   static const String _keyId = "id_customer";
   static const String _keyNama = "nama_customer";
-  static const String _keyEmail = "email_customer";
+  static const String _keyEmail = "email"; // Sesuaikan sama key di Laravel
   static const String _keyFoto = "foto";
 
   @override
@@ -49,123 +50,182 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // 1. Logic Login Manual
+  // 1. Logic Login Manual
   Future<void> _loginManual() async {
-    String nama = _usernameController.text.trim();
+    String emailText = _usernameController.text.trim(); 
     String password = _passwordController.text.trim();
 
-    if (nama.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Nama dan password wajib diisi")));
+    if (emailText.isEmpty || password.isEmpty) {
+      _showSnackBar("Email dan password wajib diisi");
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-    var url = Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/apimobile/login.php');
-    var response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"nama_customer": nama, "password_customer": password}),
-    );
-
-    if (response.statusCode == 200) {
-      var res = jsonDecode(response.body);
-      if (res['success'] == true) {
-        // --- PERBAIKAN DI SINI ---
-        await _saveSession(
-          res['id_customer'].toString(),
-          res['nama_customer'],
-          res['email_customer'],
-          res['foto'], // Pakai res['foto'], JANGAN 'null' lagi bre!
-        );
-
-        if (!mounted) return;
-        Navigator.pushReplacementNamed(context, '/dashboard');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'])));
-      }
-    }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
-  } finally {
-    if (mounted) setState(() => _isLoading = false);
-  }
-}
-
-// 2. Update _loginWithGoogle jadi seperti ini
-Future<void> _loginWithGoogle() async {
-  setState(() => _isLoading = true);
-  try {
-    final GoogleSignIn googleSignIn = GoogleSignIn(
-      scopes: ['email', 'profile'],
-    );
-    
-    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-    
-    if (googleUser == null) {
-      setState(() => _isLoading = false);
-      return;
-    }
-
-    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-    
-    // AuthCredential hanya butuh idToken untuk Firebase
-    final AuthCredential credential = GoogleAuthProvider.credential(
-      idToken: googleAuth.idToken,
-      accessToken: googleAuth.accessToken, // Masih boleh disertakan, tapi opsional
-    );
-
-    // Dapatkan user dari hasil sign-in Firebase
-    UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
-    User? user = userCredential.user;
-
-    // Sekarang variabel 'user' sudah terdefinisi dan siap dipakai
-    if (user != null && mounted) {
-      var url = Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/apimobile/google_login.php');
+      var url = Uri.parse('http://172.16.103.79:8000/api/login');
       var response = await http.post(
         url,
-        headers: {"Content-Type": "application/json"},
+        headers: {"Accept": "application/json", "Content-Type": "application/json"},
         body: jsonEncode({
-          "email_customer": user.email,
-          "nama_customer": user.displayName,
-          "foto": user.photoURL,
+          "email": emailText, 
+          "password": password 
         }),
       );
 
+      debugPrint("DEBUG LOGIN STATUS: ${response.statusCode}");
+      debugPrint("DEBUG LOGIN BODY: ${response.body}");
+
+      var res = jsonDecode(response.body);
+
       if (response.statusCode == 200) {
-        var res = jsonDecode(response.body);
-        if (res['success'] == true) {
+        // LOGIN BERHASIL
+        if (res['status'] == 'success' || res['success'] == true) { 
+          var dataUser = res['data'] ?? {};
+
           await _saveSession(
-            res['id_customer'].toString(), 
-            res['nama_customer'], 
-            res['email_customer'], 
-            res['foto']
+            res['token'] ?? "",
+            (dataUser['id_customer'] ?? dataUser['id'] ?? "").toString(),
+            dataUser['nama_customer'] ?? "Pengguna",
+            dataUser['email'] ?? emailText, 
+            dataUser['foto'] ?? "",
           );
+
           if (!mounted) return;
           Navigator.pushReplacementNamed(context, '/dashboard');
         } else {
-          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'])));
+          _showSnackBar(res['message'] ?? "Login Gagal");
+        }
+      } 
+      // TANGKAP ERROR 401 ATAU 404 DARI LARAVEL
+      else if (response.statusCode == 401 || response.statusCode == 404) {
+        _showSnackBar(res['message'] ?? "Email atau Password salah!");
+      } 
+      // TANGKAP ERROR SERVER LAINNYA
+      else {
+        _showSnackBar("Server Error: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("ERROR LOGIN: $e");
+      _showSnackBar("Gagal login: $e");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // FUNGSI PEMBANTU SNACKBAR BIAR RAPI
+  void _showSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+// 2. Update _loginWithGoogle jadi seperti ini
+Future<void> _loginWithGoogle() async {
+    setState(() => _isLoading = true);
+    try {
+      debugPrint("DEBUG: Memulai Google Sign-In...");
+      final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      
+      if (googleUser == null) {
+        debugPrint("DEBUG: User batal login");
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      
+      // Auth Firebase
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        idToken: googleAuth.idToken,
+        accessToken: googleAuth.accessToken,
+      );
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
+      debugPrint("DEBUG: Firebase sukses. Tembak ke Laravel...");
+      
+      var url = Uri.parse('http://172.16.103.79:8000/api/google-login'); // Pastikan IP Laptop bener!
+      var response = await http.post(
+        url,
+        headers: {"Accept": "application/json", "Content-Type": "application/json"},
+        body: jsonEncode({
+          "email": googleUser.email,
+          "nama": googleUser.displayName,
+          "foto": googleUser.photoUrl,
+          "google_id": googleUser.id, 
+        }),
+      ).timeout(const Duration(seconds: 15)); // Biar gak muter selamanya kalau koneksi jelek
+
+      // CEK APA KATA LARAVEL DI CONSOLE
+      debugPrint("DEBUG HTTP STATUS: ${response.statusCode}");
+      debugPrint("DEBUG HTTP BODY: ${response.body}");
+
+      if (response.statusCode == 200) {
+        var res = jsonDecode(response.body);
+
+        // Cek dua kemungkinan: 'status' atau 'success'
+        if (res['status'] == 'success' || res['success'] == true) {
+          debugPrint("DEBUG: Login Berhasil. Menjalankan navigasi..."); 
+          
+          // Amankan data biar gak crash kalau Laravel ngirim data kosong
+          var dataUser = res['data'] ?? {};
+
+          // SIMPEN TOKEN DARI LARAVEL
+          await _saveSession(
+            res['token'] ?? "", 
+            (dataUser['id_customer'] ?? dataUser['id'] ?? "").toString(), 
+            dataUser['nama_customer'] ?? googleUser.displayName ?? "", 
+            dataUser['email'] ?? googleUser.email ?? "", 
+            dataUser['foto'] ?? googleUser.photoUrl ?? ""
+          );
+          
+          if (!mounted) return;
+          Navigator.pushReplacementNamed(context, '/dashboard');
+        } else {
+          debugPrint("DEBUG: Login Ditolak Laravel: ${res['message']}");
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(res['message'] ?? "Gagal Login dari server"))
+            );
+          }
+        } 
+      } else {
+        // Kalau server mati atau rute gak ketemu (404/500)
+        debugPrint("DEBUG: Server Error. Status: ${response.statusCode}");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Server bermasalah. Status: ${response.statusCode}"))
+          );
         }
       }
+    } catch (e) {
+      debugPrint("DEBUG ERROR TOTAL: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Terjadi kesalahan: $e"))
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-  } catch (e) {
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
-  } finally {
-    if (mounted) setState(() => _isLoading = false);
   }
-}
 
   // Helper Simpan Sesi
-  Future<void> _saveSession(String id, String nama, String email, String? foto) async {
+  Future<void> _saveSession(String token, String id, String nama, String email, String? foto) async {
   final prefs = await SharedPreferences.getInstance();
+  await prefs.setString(_keyToken, token); // Simpen Token sakti di sini
   await prefs.setString(_keyId, id);
   await prefs.setString(_keyNama, nama);
   await prefs.setString(_keyEmail, email);
-  
-  // Pakai ini: Kalau foto null, simpen string kosong ("") biar foto lama kehapus
   await prefs.setString(_keyFoto, foto ?? ""); 
   
-  print("DEBUG LOGIN: Berhasil simpen foto -> ${foto ?? 'Kosong'}");
+  debugPrint("DEBUG LOGIN: Token berhasil disimpan!");
 }
 
   @override
@@ -250,14 +310,14 @@ Future<void> _loginWithGoogle() async {
 
                     // Label Username
                     const Text(
-                      "Nama Pengguna",
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14.0,
-                        color: Color(0xFF4E4E4E),
-                      ),
+                    "Email Pengguna", // Tadinya "Nama Pengguna"
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14.0,
+                      color: Color(0xFF4E4E4E),
                     ),
+                  ),
                     const SizedBox(height: 4.0),
 
                     // Input Username
@@ -265,7 +325,7 @@ Future<void> _loginWithGoogle() async {
                       controller: _usernameController,
                       style: const TextStyle(fontFamily: 'Poppins', fontSize: 14.0),
                       decoration: InputDecoration(
-                        hintText: "Masukkan Nama Pengguna",
+                        hintText: "Masukkan Alamat Email",
                         hintStyle: const TextStyle(fontFamily: 'Poppins', fontSize: 14.0),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 15.0),
                         border: OutlineInputBorder(

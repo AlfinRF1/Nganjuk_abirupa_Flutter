@@ -26,61 +26,84 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   }
 
   Future<void> _loadRiwayat() async {
-    print("ALARM: _loadRiwayat dipanggil!");
-    setState(() => _isLoading = true);
+  print("ALARM: _loadRiwayat dipanggil!");
+  setState(() => _isLoading = true);
+  
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    String idCustomer = prefs.getString("id_customer") ?? "";
+    String token = prefs.getString("token") ?? ""; // WAJIB AMBIL TOKEN
     
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      String idCustomer = prefs.getString("id_customer") ?? "";
-      
-      setState(() {
-        _namaCustomer = prefs.getString("nama_customer") ?? "Pengguna";
-      });
-      
-      if (idCustomer.isEmpty) {
-        print("ALARM: ID Customer kosong!");
-        setState(() => _isLoading = false);
-        return;
+    setState(() {
+      _namaCustomer = prefs.getString("nama_customer") ?? "Pengguna";
+    });
+    
+    if (idCustomer.isEmpty) {
+      print("ALARM: ID Customer kosong!");
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    // GANTI KE IP LAPTOP LU![cite: 4]
+    var url = 'http://172.16.103.79:8000/api/riwayat?id_customer=$idCustomer';
+    
+    var response = await http.get(
+      Uri.parse(url),
+      headers: {
+        "Accept": "application/json",
+        "Authorization": "Bearer $token", // TEMPEL TOKEN DI SINI
+      }
+    );
+    
+    debugPrint("DEBUG RIWAYAT STATUS: ${response.statusCode}");
+    debugPrint("DEBUG RIWAYAT BODY: ${response.body}");
+
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body);
+      List<dynamic> list = [];
+
+      // Laravel lu nge-return langsung array [ ... ], bukan objek { status: success, data: [ ... ] }[cite: 5]
+      // Jadi kita handle biar Flutter nggak bingung.
+      if (data is List) {
+        list = data; 
+      } else if (data is Map && data['data'] != null) {
+        list = data['data'];
       }
 
-      var url = 'https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/apimobile/get_riwayat.php?id_customer=$idCustomer';
-      var response = await http.get(Uri.parse(url));
-      
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        if (data['status'] == 'success') {
-          List<dynamic> list = data['data'];
-          
-          // Sort data
-          list.sort((a, b) {
-            int idA = int.tryParse(a['id_transaksi'].toString()) ?? 0;
-            int idB = int.tryParse(b['id_transaksi'].toString()) ?? 0;
-            return idB.compareTo(idA);
-          });
+      // Sort data id terbesar di atas
+      list.sort((a, b) {
+        int idA = int.tryParse(a['id_transaksi'].toString()) ?? 0;
+        int idB = int.tryParse(b['id_transaksi'].toString()) ?? 0;
+        return idB.compareTo(idA);
+      });
 
-          setState(() {
-            _riwayatList = list;
-            _filteredList = list; // <--- INI HARUSNYA MUNCULIN DATA
-          });
-          // Di dalam _loadRiwayat, setelah list didapat:
-          for (var item in list) {
-            DateTime tglPesanan = DateTime.parse(item['tanggal']);
-            DateTime hariIni = DateTime.now();
+      setState(() {
+        _riwayatList = list;
+        _filteredList = list; // INI YANG MUNCULIN DATA KE LAYAR[cite: 4]
+      });
 
-            // Kalau masih menunggu tapi sudah lewat tanggal, update statusnya jadi 'Selesai'
-            if (item['status'] == "Menunggu" && tglPesanan.isBefore(hariIni)) {
-              item['status'] = "Selesai";
-            }
+      for (var item in list) {
+        try {
+          DateTime tglPesanan = DateTime.parse(item['tanggal'].toString());
+          DateTime hariIni = DateTime.now();
+
+          if (item['status'] == "Menunggu" && tglPesanan.isBefore(hariIni)) {
+            item['status'] = "Selesai";
           }
-          print("ALARM: Data berhasil dimuat: ${list.length} item");
+        } catch(e) {
+          // Abaikan kalau tanggalnya format aneh
         }
       }
-    } catch (e) {
-      print("ALARM: ERROR PARAH: $e");
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+      print("ALARM: Data berhasil dimuat: ${list.length} item");
+    } else {
+      print("ALARM: Server nolak. Status: ${response.statusCode}");
     }
+  } catch (e) {
+    print("ALARM: ERROR PARAH: $e");
+  } finally {
+    if (mounted) setState(() => _isLoading = false);
   }
+}
 
   void _filterData(String? wisata, String? status) {
     print("Filter: Wisata=$wisata, Status=$status");
@@ -104,20 +127,28 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   }
 
   Widget _buildWisataImage(String namaWisata, String urlGambar) {
+    debugPrint("DEBUG GAMBAR: Nama='$namaWisata', URL='$urlGambar'"); // Biar ketahuan isinya kosong atau nggak
+
     String lower = namaWisata.toLowerCase();
     String localAsset = '';
-    if (lower.contains("sedudo")) {
-      localAsset = 'assets/images/wisata_air_terjun_sedudo.png';
-    } else if (lower.contains("roro kuning")) localAsset = 'assets/images/wisata_roro_kuning.png';
-    else if (lower.contains("margo tresno")) localAsset = 'assets/images/wisata_goa_margotresno.png';
-    else if (lower.contains("sri tanjung")) localAsset = 'assets/images/wisata_sritanjung.png';
-    else if (lower.contains("anjuk ladang")) localAsset = 'assets/images/wisata_tral.png';
-
-    if (localAsset.isNotEmpty) {
-      return Image.asset(localAsset, fit: BoxFit.cover, errorBuilder: (c, e, s) => Container(color: Colors.grey[300]));
-    }
-    String finalUrl = urlGambar.startsWith('http') ? urlGambar : 'https://nganjukabirupa.pbltifnganjuk.com/assets/images/destinasi/$urlGambar';
-    return Image.network(finalUrl, fit: BoxFit.cover, errorBuilder: (c, e, s) => Container(color: Colors.grey[300]));
+    
+    // KALAU GAK ADA DI LOKAL, TARIK DARI SERVER LAPTOP LU
+    // Pastikan path foldernya sesuai dengan struktur folder 'public' di Laravel lu
+    String finalUrl = urlGambar.startsWith('http') 
+        ? urlGambar 
+        : 'http://172.16.103.79:8000/images/destinasi/$urlGambar'; // Ganti ke IP[cite: 4]
+        
+    return Image.network(
+      finalUrl, 
+      fit: BoxFit.cover, 
+      errorBuilder: (c, e, s) {
+        debugPrint("GAGAL LOAD GAMBAR DARI: $finalUrl"); // Lacak URL errornya
+        return Container(
+          color: Colors.grey[300],
+          child: const Icon(Icons.broken_image, color: Colors.grey),
+        );
+      }
+    );
   }
 
   @override
@@ -204,7 +235,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
           // Gambar Wisata
           ClipRRect(
             borderRadius: BorderRadius.circular(8), 
-            child: SizedBox(width: 100, height: 100, child: _buildWisataImage(item['nama_wisata'], item['gambar']))
+            child: SizedBox(width: 100, height: 100, child: _buildWisataImage(item['nama_wisata'], item['gambar'] ?? ''))
           ),
           const SizedBox(width: 12),
           // Info Teks

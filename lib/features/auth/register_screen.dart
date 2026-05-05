@@ -34,12 +34,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
     
-    // VALIDASI REGEX: Disesuaikan agar mendeteksi jika entah bagaimana ada spasi/simbol yang lolos
+    // VALIDASI REGEX: Disesuaikan agar mendeteksi jika entah bagaimana ada spasi/simbol yang lolos[cite: 8]
     if (!RegExp(r"^[a-zA-Z0-9]*$").hasMatch(nama)) {
       setState(() => _nameError = "Hanya huruf dan angka tanpa spasi!");
       return;
     }
 
+    // MATIKAN SEMENTARA PENGECEKAN KE SERVER LAMA
+    /* 
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       try {
@@ -57,6 +59,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (mounted) setState(() => _nameError = "Koneksi ke server gagal");
       }
     });
+    */
   }
 
   Future<void> _handleRegister() async {
@@ -71,52 +74,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    if (_nameError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_nameError!), backgroundColor: Colors.red));
-      return;
-    }
-
-    if (phone.length < 10) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("No. Telp minimal 10 karakter!"), backgroundColor: Colors.orange));
-      return;
-    }
-
-    final emailRegex = RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+");
-    if (!emailRegex.hasMatch(email)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Format email tidak valid!"), backgroundColor: Colors.red));
-      return;
-    }
-
     if (password != confirm) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Password dan Konfirmasi tidak cocok!"), backgroundColor: Colors.orange));
-      return;
-    }
-    if (password.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Password minimal 6 karakter!"), backgroundColor: Colors.red));
       return;
     }
 
     setState(() => _isLoading = true);
     
     try {
-      var url = Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/apimobile/register.php');
+      // 1. GANTI KE URL LARAVEL LOKAL LU!
+      var url = Uri.parse('http://172.16.103.79:8000/api/register');
       
       var response = await http.post(
         url,
-        headers: {"Content-Type": "application/json"},
+        headers: {"Accept": "application/json", "Content-Type": "application/json"},
         body: jsonEncode({
-          "nama_customer": name,
-          "email_customer": email,
+          "nama": name, // Sesuaikan sama $request->nama di Laravel
+          "email": email, // Sesuaikan sama $request->email di Laravel
           "no_tlp": phone,
-          "password_customer": password,
+          "password": password, 
         }),
       );
 
-      if (response.statusCode == 200) {
+      debugPrint("DEBUG REGISTER: ${response.statusCode} - ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
         var res = jsonDecode(response.body);
         if (!mounted) return;
         
-        if (res['success'] == true) {
+        if (res['status'] == 'success') { // Cocokin pake 'status'
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Registrasi Berhasil! Silakan Login."), backgroundColor: Colors.green));
           Navigator.pop(context); 
         } else {

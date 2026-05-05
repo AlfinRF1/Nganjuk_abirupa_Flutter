@@ -28,6 +28,7 @@ class _PemesananScreenState extends State<PemesananScreen> {
   final _namaController = TextEditingController();
   final _teleponController = TextEditingController();
   final _tanggalController = TextEditingController();
+  final _emailController = TextEditingController(); // Tambah ini bre
 
   int jumlahDewasa = 0;
   int jumlahAnak = 0;
@@ -48,6 +49,7 @@ class _PemesananScreenState extends State<PemesananScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _namaController.text = prefs.getString("nama_customer") ?? "";
+      _emailController.text = prefs.getString("email") ?? "";
     });
   }
 
@@ -98,78 +100,80 @@ class _PemesananScreenState extends State<PemesananScreen> {
   }
 
   Future<void> _prosesPembayaran() async {
+  // 1. Ambil data dari Controller
+  String nama = _namaController.text.trim();
+  String tlp = _teleponController.text.trim();
+  String tgl = _tanggalController.text.trim();
 
-    String nama = _namaController.text.trim();
-    String tlp = _teleponController.text.trim();
-    String tgl = _tanggalController.text.trim();
-
-    if (_namaController.text.isEmpty || _teleponController.text.isEmpty || _tanggalController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Mohon lengkapi semua data")));
-      return;
-    }
-    if (jumlahDewasa + jumlahAnak == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Pilih pengunjung terlebih dahulu")));
-      return;
-    }
-    
-    // 1. CEK KOSONG
-    if (nama.isEmpty || tlp.isEmpty || tgl.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Mohon lengkapi semua data")));
-      return;
-    }
-
-    // 2. VALIDASI PANJANG NOMOR TELEPON (Minimal 11)
-    if (tlp.length < 11) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Nomor telepon tidak valid! Minimal 11 digit."),
-          backgroundColor: Colors.redAccent,
-        )
-      );
-      return;
-    }
-    setState(() => isLoading = true);
-
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      String idCustomer = prefs.getString("id_customer") ?? "";
-
-      var response = await http.post(
-        Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/apimobile/insert_pemesanan.php'),
-        body: {
-          "nama_customer": _namaController.text,
-          "tlp_costumer": _teleponController.text,
-          "tanggal": _tanggalController.text,
-          "jml_tiket": (jumlahDewasa + jumlahAnak).toString(),
-          "harga_total": totalHarga.toString(),
-          "id_wisata": widget.idWisata.toString(),
-          "id_customer": idCustomer,
-        },
-      );
-
-      var data = jsonDecode(response.body);
-
-      if (data['status'] == 'success') {
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => QrCodeScreen(
-              totalHarga: totalHarga,
-              idWisata: widget.idWisata,
-            ),
-          ),
-        );
-      } else {
-        throw Exception(data['message']);
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal: $e")));
-    } finally {
-      if (mounted) setState(() => isLoading = false);
-    }
+  // 2. Validasi Dasar
+  if (nama.isEmpty || tlp.isEmpty || tgl.isEmpty || (jumlahDewasa + jumlahAnak == 0)) {
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Mohon lengkapi semua data dan pengunjung")));
+    return;
   }
+
+  setState(() => isLoading = true);
+  debugPrint("DEBUG: Memulai proses pembayaran ke Laravel...");
+
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    String token = prefs.getString("token") ?? "";
+    String idCustomer = prefs.getString("id_customer") ?? "";
+    String emailUser = prefs.getString("email") ?? ""; // Email wajib sesuai gambar DB
+
+    // GANTI dengan IP laptop kamu!
+    final String url = 'http://172.16.103.79:8000/api/pemesanan';
+
+    debugPrint("DEBUG: Mengirim data ke $url");
+
+    var response = await http.post(
+      Uri.parse(url),
+      headers: {
+        "Accept": "application/json", // Wajib agar Laravel kirim JSON
+        "Authorization": "Bearer $token",
+      },
+      body: {
+        "nama_customer": nama,
+        "tlp_costumer": tlp, // Sesuai typo di database kamu
+        "tanggal": tgl,
+        "jml_tiket": (jumlahDewasa + jumlahAnak).toString(),
+        "harga_total": totalHarga.toString(),
+        "id_wisata": widget.idWisata.toString(),
+        "id_customer": idCustomer,
+        "email": emailUser, // Kolom wajib ke-9
+      },
+    );
+
+    debugPrint("DEBUG: Status Code: ${response.statusCode}");
+    debugPrint("DEBUG: Response Body: ${response.body}");
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && data['status'] == 'success') {
+      debugPrint("DEBUG: Pemesanan Berhasil, Pindah ke QR Screen.");
+      if (!mounted) return;
+      
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => QrCodeScreen(
+            totalHarga: totalHarga,
+            idWisata: widget.idWisata,
+          ),
+        ),
+      );
+    } else {
+      debugPrint("DEBUG: Server mengembalikan error: ${data['message']}");
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal: ${data['message']}")));
+    }
+  } catch (e) {
+    debugPrint("DEBUG: ERROR TOTAL: $e");
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Terjadi kesalahan koneksi: $e")));
+  } finally {
+    if (mounted) setState(() => isLoading = false);
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -201,6 +205,14 @@ class _PemesananScreenState extends State<PemesananScreen> {
               
               _buildInputLabel("Nomor Telepon"),
               _buildTextField(controller: _teleponController, hint: "+62 123 123 123", isNumber: true),
+              const SizedBox(height: 16),
+
+              _buildInputLabel("Email"),
+              _buildTextField(
+                controller: _emailController, 
+                hint: "contoh@email.com", 
+                isNumber: false, // Email pake keyboard teks biasa
+              ),
               const SizedBox(height: 16),
 
               _buildInputLabel("Tanggal Pemesanan"),

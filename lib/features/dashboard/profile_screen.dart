@@ -30,29 +30,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadProfileData() async {
-  final prefs = await SharedPreferences.getInstance();
-  
-  // Ambil apa adanya dari SharedPreferences
-  String? pathDariDB = prefs.getString("foto"); 
+    final prefs = await SharedPreferences.getInstance();
+    String? pathDariDB = prefs.getString("foto"); 
 
-  setState(() {
-    _nameController.text = prefs.getString("nama_customer") ?? "";
-    _emailController.text = prefs.getString("email_customer") ?? "";
+    setState(() {
+      _nameController.text = prefs.getString("nama_customer") ?? "";
+      _emailController.text = prefs.getString("email") ?? ""; // Sesuaikan kunci email lu
 
-    if (pathDariDB != null && pathDariDB.isNotEmpty) {
-      if (pathDariDB.startsWith('http')) {
-        _photoUrl = pathDariDB; 
+      if (pathDariDB != null && pathDariDB.isNotEmpty) {
+        if (pathDariDB.startsWith('http')) {
+          _photoUrl = pathDariDB; 
+        } else {
+          // GANTI KE IP LAPTOP LU! Arahkan ke folder storage/profil[cite: 6, 7]
+          _photoUrl = "http://172.16.103.79:8000/storage/profil/$pathDariDB";
+        }
       } else {
-        // PERHATIKAN: Langsung tempel domain + pathDariDB
-        // Karena pathDariDB isinya udah "uploads/1776676472_..."
-        _photoUrl = "https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/$pathDariDB";
+        _photoUrl = null;
       }
-      print("HASIL URL FINAL: $_photoUrl"); // Cek link ini di console VS Code
-    } else {
-      _photoUrl = null;
-    }
-  });
-}
+    });
+  }
 
   // ==========================================
   // LOGIKA SISTEM FOTO PROFIL (PICK, CROP, UPLOAD)
@@ -114,57 +110,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final prefs = await SharedPreferences.getInstance();
     String idCustomer = prefs.getString("id_customer") ?? "";
-
-    // 1. CEK: ID Customer-nya beneran ada isinya gak?
-    print("DEBUG: ID Customer = $idCustomer");
-    print("DEBUG: File Path = ${_imageFile!.path}");
+    String token = prefs.getString("token") ?? ""; // AMBIL TOKEN!
 
     setState(() => _isLoading = true);
 
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/apimobile/update_foto.php'),
+        Uri.parse('http://172.16.103.79:8000/api/profile/update'), // URL LARAVEL BARU
       );
 
+      // TEMPEL TOKEN DI HEADER BIAR GAK UNAUTHENTICATED
       request.headers.addAll({
         'Accept': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+        'Authorization': 'Bearer $token',
       });
 
-      // 2. PASTIIN KEY-NYA SAMA PERSIS DENGAN PHP LU
       request.fields['id_customer'] = idCustomer; 
 
       request.files.add(
-        await http.MultipartFile.fromPath(
-          'foto', // <-- CEK: Apakah di PHP lu pakenya 'foto' atau 'gambar' atau 'image'?
-          _imageFile!.path,
-        ),
+        await http.MultipartFile.fromPath('foto', _imageFile!.path),
       );
 
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
-      print("=== DEBUG RESPONSE SERVER ===");
-      print(response.body); 
-      print("=============================");
       var res = jsonDecode(response.body);
       
       if (res['status'] == 'success') {
-        // Update prefs lokal dengan path relatif baru dari server
         await prefs.setString("foto", res['foto']);
-        
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Foto berhasil diupdate!")));
-        _loadProfileData(); // Reload biar URL server sinkron
+        _loadProfileData(); 
       } else {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal upload: ${res['message']}")));
-        _loadProfileData(); // Balikin foto lama
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal: ${res['message']}")));
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error koneksi server: $e")));
-      _loadProfileData(); // Balikin foto lama
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error koneksi: $e")));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -174,32 +157,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _deletePhoto() async {
     final prefs = await SharedPreferences.getInstance();
     String idCustomer = prefs.getString("id_customer") ?? "";
+    String token = prefs.getString("token") ?? "";
 
     setState(() => _isLoading = true);
 
     try {
-      // delete_foto.php lu minta POST, jadi kita kirim body
       var response = await http.post(
-        Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/apimobile/delete_foto.php'),
-        body: {'id_customer': idCustomer}, // Sesuai $_POST['id_customer'] di PHP lu
+        Uri.parse('http://172.16.103.79:8000/api/profile/hapus-foto'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token', // TEMPEL TOKEN
+        },
+        body: {'id_customer': idCustomer},
       );
 
       var res = jsonDecode(response.body);
 
       if (res['status'] == 'success') {
-        // Hapus path foto di prefs lokal
         await prefs.remove("foto");
-        
+        setState(() => _photoUrl = null); // Kosongin dari UI
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Foto berhasil dihapus!")));
-        _loadProfileData(); // Reload biar avatar balik default
       } else {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal hapus: ${res['message']}")));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal: ${res['message']}")));
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error koneksi server: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error server: $e")));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -295,20 +280,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _isLoading = true);
     final prefs = await SharedPreferences.getInstance();
     String idCustomer = prefs.getString("id_customer") ?? "";
+    String token = prefs.getString("token") ?? "";
 
     try {
-      // Panggil updateProfile.php (yang khusus teks)
       var response = await http.post(
-        Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/apimobile/updateProfile.php'),
+        Uri.parse('http://172.16.103.79:8000/api/profile/update'), // URL LARAVEL
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+          'Authorization': 'Bearer $token', // TEMPEL TOKEN
         },
         body: {
           "id_customer": idCustomer,
           "nama_customer": _nameController.text,
-          "email_customer": _emailController.text,
-          "password": _passwordController.text,
+          "email_customer": _emailController.text, // Kirim Email[cite: 7]
+          "password": _passwordController.text, // Kirim Password[cite: 7]
         },
       );
 
@@ -316,17 +301,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       if (res['status'] == 'success') {
         await prefs.setString("nama_customer", _nameController.text);
-        await prefs.setString("email_customer", _emailController.text);
+        await prefs.setString("email", _emailController.text);
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Profil berhasil diupdate!")));
         _passwordController.clear();
       } else {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'])));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? "Gagal Update")));
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal koneksi server: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal koneksi: $e")));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
