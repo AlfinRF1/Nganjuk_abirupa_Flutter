@@ -35,7 +35,7 @@ void initState() {
 Future<void> _fetchDetailWisata() async {
   try {
     // 1. GANTI IP KE IP LAPTOP LU (Contoh: 192.168.1.15)
-    final String ipLaptop = "172.16.103.79"; 
+    final String ipLaptop = "localhost:8000"; 
     
     final response = await http.get(Uri.parse(
         'http://$ipLaptop:8000/api/wisata/${widget.wisata.idWisata}'));
@@ -66,7 +66,7 @@ Future<void> _fetchDetailWisata() async {
   Future<void> _fetchReviews() async {
   try {
     var response = await http.get(
-      Uri.parse('http://172.16.103.79:8000/api/wisata/${widget.wisata.idWisata}'),
+      Uri.parse('http://localhost:8000/api/wisata/${widget.wisata.idWisata}'),
       headers: {"Accept": "application/json"},
     );
 
@@ -318,7 +318,7 @@ Future<void> _fetchDetailWisata() async {
 
               // 2. PINDAH KE URL LARAVEL LOKAL
               var response = await http.post(
-                Uri.parse('http://172.16.103.79:8000/api/ulasan'), // Sesuaikan route di Laravel
+                Uri.parse('http://localhost:8000/api/ulasan'), // Sesuaikan route di Laravel
                 headers: {
                   "Content-Type": "application/json",
                   "Accept": "application/json",
@@ -382,7 +382,7 @@ Future<void> _fetchDetailWisata() async {
       customer["foto"]?.toString() ?? ""
     ),
   );
-}).toList(),
+}),
     ],
   );
 }

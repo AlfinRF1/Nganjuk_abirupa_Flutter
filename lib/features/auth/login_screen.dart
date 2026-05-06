@@ -63,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      var url = Uri.parse('http://172.16.103.79:8000/api/login');
+      var url = Uri.parse('http://localhost:8000/api/login');
       var response = await http.post(
         url,
         headers: {"Accept": "application/json", "Content-Type": "application/json"},
@@ -150,7 +150,7 @@ Future<void> _loginWithGoogle() async {
 
       debugPrint("DEBUG: Firebase sukses. Tembak ke Laravel...");
       
-      var url = Uri.parse('http://172.16.103.79:8000/api/google-login'); // Pastikan IP Laptop bener!
+      var url = Uri.parse('http://localhost:8000/api/google-login'); // Pastikan IP Laptop bener!
       var response = await http.post(
         url,
         headers: {"Accept": "application/json", "Content-Type": "application/json"},

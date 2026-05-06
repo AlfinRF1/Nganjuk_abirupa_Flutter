@@ -17,42 +17,42 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> {
   final List<TextEditingController> _controllers = List.generate(5, (index) => TextEditingController());
 
   Future<void> _verifyOTP(String email) async {
-    // 2. Gabungin 5 angka jadi 1 string
+    print("LOG: Tombol ditekan!"); // Cek apakah tombol jalan
     String otp = _controllers.map((controller) => controller.text).join();
+    print("LOG: OTP yang diinput: $otp");
 
     if (otp.length < 5) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Lengkapi 5 digit kode!")));
+      print("LOG: OTP kurang dari 5 digit");
       return;
     }
 
     setState(() => _isLoading = true);
+    print("LOG: Mulai kirim data ke localhost...");
 
-    try {
-      final response = await http.post(
-        Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/apimobile/verify_otp.php'),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "email": email,
-          "otp": otp,
-        }),
-      );
+    final response = await http.post(
+  Uri.parse('http://localhost:8000/api/verify-otp'), 
+  headers: {
+    "Content-Type": "application/json",
+    "Accept": "application/json"
+  },
+  body: jsonEncode({
+    "email": email,
+    "otp": otp,
+  }),
+);
 
-      final data = jsonDecode(response.body);
+final data = jsonDecode(response.body);
 
-      if (data['status'] == 'success') {
-        if (mounted) {
-          // 3. Pindah ke set password sambil bawa email
-          Navigator.pushReplacementNamed(context, '/set-new-password', arguments: email);
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(data['message'])));
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Gagal konek ke server")));
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+if (data['status'] == 'success') {
+  print("LOG: Verifikasi Sukses!"); // Tambahin print buat pastiin
+  if (mounted) {
+    Navigator.pushReplacementNamed(context, '/set-new-password', arguments: email);
   }
+} else {
+  print("LOG: Verifikasi Gagal: ${data['message']}");
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(data['message'] ?? "Kode salah")));
+}
+}
 
   @override
   Widget build(BuildContext context) {

@@ -42,7 +42,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _photoUrl = pathDariDB; 
         } else {
           // GANTI KE IP LAPTOP LU! Arahkan ke folder storage/profil[cite: 6, 7]
-          _photoUrl = "http://172.16.103.79:8000/storage/profil/$pathDariDB";
+          _photoUrl = "http://localhost:8000/storage/profil/$pathDariDB";
         }
       } else {
         _photoUrl = null;
@@ -117,7 +117,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://172.16.103.79:8000/api/profile/update'), // URL LARAVEL BARU
+        Uri.parse('http://localhost:8000/api/profile/update'), // URL LARAVEL BARU
       );
 
       // TEMPEL TOKEN DI HEADER BIAR GAK UNAUTHENTICATED
@@ -163,7 +163,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       var response = await http.post(
-        Uri.parse('http://172.16.103.79:8000/api/profile/hapus-foto'),
+        Uri.parse('http://localhost:8000/api/profile/hapus-foto'),
         headers: {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token', // TEMPEL TOKEN
@@ -284,7 +284,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       var response = await http.post(
-        Uri.parse('http://172.16.103.79:8000/api/profile/update'), // URL LARAVEL
+        Uri.parse('http://localhost:8000/api/profile/update'), // URL LARAVEL
         headers: {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token', // TEMPEL TOKEN

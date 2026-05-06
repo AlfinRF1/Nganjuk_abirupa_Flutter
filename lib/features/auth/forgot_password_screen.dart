@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -79,48 +78,74 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   elevation: 0,
                 ),
                 onPressed: _isLoading ? null : () async {
-        if (_emailController.text.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Email tidak boleh kosong!"))
-          );
-          return;
-        }
-        
-      setState(() => _isLoading = true);
-  
-  // GANTI INI PAKAI http.post LU!
-      try {
-        // Contoh panggil API
-        final response = await http.post(
-          Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/apimobile/request_otp.php'),
-          headers: {"Content-Type": "application/json"},
-          body: jsonEncode({"email": _emailController.text}),
-        );
+                  if (_emailController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Email tidak boleh kosong!"),
+                        backgroundColor: Colors.redAccent,
+                      )
+                    );
+                    return;
+                  }
+                  
+                  setState(() => _isLoading = true);
+          
+                  try {
+                    // 1. NEMBAK KE API LARAVEL LOKAL[cite: 5]
+                    final response = await http.post(
+                    Uri.parse('http://localhost:8000/api/forgot-password'), // Ganti jadi localhost
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Accept": "application/json" // Penting buat Laravel[cite: 1]
+                    },
+                    body: jsonEncode({"email": _emailController.text}),
+                  );
 
-        // --- TARUH PRINT DI SINI ---
-        print("STATUS CODE: ${response.statusCode}");
-        print("RESPONSE BODY: ${response.body}");
-        // ---------------------------
+                    debugPrint("STATUS CODE: ${response.statusCode}");
+                    debugPrint("RESPONSE BODY: ${response.body}");
 
-        if (response.statusCode == 200) {
-          if (mounted) {
-            setState(() => _isLoading = false);
-            Navigator.pushNamed(context, '/verify-code', arguments: _emailController.text);
-          }
-        } else {
-          // Handle error jika status bukan 200
-          print("Gagal: ${response.statusCode}");
-        }
-        
-      } catch (e) {
-        print("ERROR KONEKSI: $e");
-      } finally {
-        if (mounted) setState(() => _isLoading = false);
-      }
-    },
+                    if (response.statusCode == 200) {
+                      var res = jsonDecode(response.body);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(res['message'] ?? "Kode OTP terkirim!"),
+                            backgroundColor: Colors.green,
+                          )
+                        );
+                        // Lempar email ke halaman verifikasi biar nggak usah ngetik lagi
+                        Navigator.pushNamed(context, '/verify-code', arguments: _emailController.text);
+                      }
+                    } else {
+                      // 2. NANGKAP ERROR DARI LARAVEL (Misal: Email tidak terdaftar)
+                      var res = jsonDecode(response.body);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(res['message'] ?? "Gagal mengirim OTP"),
+                            backgroundColor: Colors.redAccent,
+                          )
+                        );
+                      }
+                    }
+                    
+                  } catch (e) {
+                    debugPrint("ERROR KONEKSI: $e");
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Koneksi bermasalah: $e"),
+                          backgroundColor: Colors.red,
+                        )
+                      );
+                    }
+                  } finally {
+                    if (mounted) setState(() => _isLoading = false);
+                  }
+                },
                 child: _isLoading 
                   ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text("Ganti Password", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                  : const Text("Kirim Kode OTP", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
           ],

@@ -121,7 +121,7 @@ class _PemesananScreenState extends State<PemesananScreen> {
     String emailUser = prefs.getString("email") ?? ""; // Email wajib sesuai gambar DB
 
     // GANTI dengan IP laptop kamu!
-    final String url = 'http://172.16.103.79:8000/api/pemesanan';
+    final String url = 'http://localhost:8000/api/pemesanan';
 
     debugPrint("DEBUG: Mengirim data ke $url");
 

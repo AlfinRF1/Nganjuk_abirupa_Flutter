@@ -16,7 +16,6 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
   bool _isLoading = false;
 
   Future<void> _updatePassword(String email) async {
-    // 1. Validasi Input Dasar
     if (_passController.text.isEmpty || _confirmPassController.text.isEmpty) {
       _showSnackBar("Semua kolom harus diisi!");
       return;
@@ -35,24 +34,25 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // 2. Tembak API
+      // 1. Tembak API ke Laravel Localhost via ADB
       final response = await http.post(
-        Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/nganjukabirupa/apimobile/reset_password.php'),
-        headers: {"Content-Type": "application/json"},
+        Uri.parse('http://localhost:8000/api/reset-password'),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json" // WAJIB ADA
+        },
         body: jsonEncode({
           "email": email,
-          "new_password": _passController.text,
+          "password": _passController.text, // Disesuaikan dengan request Laravel
         }),
       );
 
       print("DEBUG RESPONSE: ${response.body}");
       final data = jsonDecode(response.body);
 
-      if (data['success'] == true) {
+      // 2. Cek balasan dari Laravel ("status" == "success")
+      if (data['status'] == 'success') {
         if (mounted) {
-          // --- KUNCI PERBAIKAN DI SINI ---
-          // Gunakan pushNamedAndRemoveUntil agar tumpukan screen lama (lupa password/otp) dihapus semua.
-          // Arahkan ke Success Screen, lalu pastikan di Success Screen tombolnya mengarah ke LOGIN.
           Navigator.pushNamedAndRemoveUntil(
             context, 
             '/forgot-password-success', 

@@ -45,7 +45,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     }
 
     // GANTI KE IP LAPTOP LU![cite: 4]
-    var url = 'http://172.16.103.79:8000/api/riwayat?id_customer=$idCustomer';
+    var url = 'http://localhost:8000/api/riwayat?id_customer=$idCustomer';
     
     var response = await http.get(
       Uri.parse(url),
@@ -136,7 +136,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     // Pastikan path foldernya sesuai dengan struktur folder 'public' di Laravel lu
     String finalUrl = urlGambar.startsWith('http') 
         ? urlGambar 
-        : 'http://172.16.103.79:8000/images/destinasi/$urlGambar'; // Ganti ke IP[cite: 4]
+        : 'http://localhost:8000/images/destinasi/$urlGambar'; // Ganti ke IP[cite: 4]
         
     return Image.network(
       finalUrl, 
