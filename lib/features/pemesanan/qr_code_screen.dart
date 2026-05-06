@@ -15,7 +15,7 @@ class QrCodeScreen extends StatelessWidget {
   String _getBarcodeImage(int idWisata) {
     switch (idWisata) {
       case 12:
-        return 'assets/images/sedudo.jpeg'; // Pastikan file ini ada di folder assets
+        return 'assets/images/sedudo.jpeg';
       case 13:
         return 'assets/images/tral.jpeg';
       case 14:
@@ -27,19 +27,11 @@ class QrCodeScreen extends StatelessWidget {
     }
   }
 
-  // Fungsi buat balik ke halaman Riwayat (mirip FLAG_ACTIVITY_CLEAR_TOP di Java)
-  void _goBackToRiwayat(BuildContext context) {
-    // Kita arahin user balik ke Dashboard, dan hapus semua tumpukan layar sebelumnya
-    // Nanti bisa sesuaikan rute '/dashboard' ini kalau beda namanya
-    Navigator.pushNamedAndRemoveUntil(context, '/riwayat', (route) => false);
-  }
-
   @override
   Widget build(BuildContext context) {
     final currencyFormat = NumberFormat.currency(locale: 'id', symbol: '', decimalDigits: 0);
 
     return Scaffold(
-      // Background gelap kayak di desain lu
       backgroundColor: const Color(0xFF222222),
       body: Center(
         child: SingleChildScrollView(
@@ -54,12 +46,12 @@ class QrCodeScreen extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // --- HEADER (Tombol Back & Judul) ---
+                  // --- HEADER ---
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       GestureDetector(
-                        onTap: () => _goBackToRiwayat(context),
+                        onTap: () => Navigator.pop(context), // Balik ke halaman sebelumnya
                         child: const Icon(Icons.arrow_back, color: Color(0xFF2E9FA6)),
                       ),
                       Expanded(
@@ -67,25 +59,18 @@ class QrCodeScreen extends StatelessWidget {
                           children: [
                             const Text(
                               "Scan QR code",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               "scan barcode untuk melakukan\npembayaran",
                               textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
+                              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 24), // Biar seimbang sama icon back
+                      const SizedBox(width: 24),
                     ],
                   ),
                   const SizedBox(height: 32),
@@ -103,7 +88,6 @@ class QrCodeScreen extends StatelessWidget {
                       child: Image.asset(
                         _getBarcodeImage(idWisata),
                         fit: BoxFit.contain,
-                        // Kalo lu belum masukin gambarnya ke folder assets, pake icon default dulu:
                         errorBuilder: (context, error, stackTrace) => const Icon(
                           Icons.qr_code_2,
                           size: 150,
@@ -114,34 +98,65 @@ class QrCodeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
 
-                  // --- TOTAL HARGA (Kotak hijau muda) ---
+                  // --- TOTAL HARGA ---
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFD0F0EE), // Warna hijau muda pastel
+                      color: const Color(0xFFD0F0EE),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          "Total :",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
+                        const Text("Total :", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         Text(
                           "Rp. ${currencyFormat.format(totalHarga)}",
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF2E9FA6),
-                          ),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2E9FA6)),
                         ),
                       ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // --- TOMBOL KONFIRMASI ---
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // Navigasi ke halaman Riwayat & hapus stack sebelumnya
+                        Navigator.pushNamedAndRemoveUntil(context, '/riwayat', (route) => false);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2E9FA6),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text(
+                        "Konfirmasi Pembayaran",
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // --- TOMBOL BATAL ---
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        // Balik ke halaman pemesanan sebelumnya
+                        Navigator.pop(context);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.red),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text(
+                        "Batalkan",
+                        style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 ],

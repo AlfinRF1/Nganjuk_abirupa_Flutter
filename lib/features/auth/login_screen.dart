@@ -50,7 +50,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // 1. Logic Login Manual
-  // 1. Logic Login Manual
   Future<void> _loginManual() async {
     String emailText = _usernameController.text.trim(); 
     String password = _passwordController.text.trim();
