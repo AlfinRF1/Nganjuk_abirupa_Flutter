@@ -7,7 +7,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-// 1. BERUBAH JADI STATEFUL WIDGET
+// --- 1. API CONFIG (Semi-Centralized sesuai request lu) ---
+class ApiConfig {
+  static const String baseUrl = "https://nganjukabirupa.pbltifnganjuk.com/api";
+  // Berdasarkan screenshot lu, folder event & destinasi jadi satu di sini
+  static const String imgUrl = "https://nganjukabirupa.pbltifnganjuk.com/images/destinasi";
+  static String detailWisata(String id) => "$baseUrl/wisata/$id";
+}
+
 class DetailWisataScreen extends StatefulWidget {
   final WisataModel wisata;
   const DetailWisataScreen({super.key, required this.wisata});
@@ -18,75 +25,81 @@ class DetailWisataScreen extends StatefulWidget {
 
 class _DetailWisataScreenState extends State<DetailWisataScreen> {
   String namaUserLogin = "Pengguna";
-  List<dynamic> _listReviews = []; // Sudah dikosongkan karena nanti diisi API
+  List<dynamic> _listReviews = []; 
+  bool _isLoading = true;
+  late WisataModel _detailWisata;
 
-bool _isLoading = true;
-late WisataModel _detailWisata;
+  // Deklarasi API lokal buat ulasan biar gampang
+  final String _ulasanUrl = "https://nganjukabirupa.pbltifnganjuk.com/api/ulasan";
 
   @override
-void initState() {
-  super.initState();
-  _detailWisata = widget.wisata; // Isi awal pakai data dari Beranda dulu
-  _ambilDataUser();
-  _fetchDetailWisata(); // <--- Panggil fungsi fetch detail
-  _fetchReviews();
-}
+  void initState() {
+    super.initState();
+    _detailWisata = widget.wisata; 
+    _ambilDataUser();
+    _fetchSemuaData(); // Sekali panggil buat Detail, Event, & Review
+  }
 
-Future<void> _fetchDetailWisata() async {
+  // --- 2. FUNGSI FETCH DATA (Hostinger Ready) ---
+  Future<void> _fetchSemuaData() async {
+  if (!mounted) return;
+  setState(() => _isLoading = true);
+
   try {
-    // 1. GANTI IP KE IP LAPTOP LU (Contoh: 192.168.1.15)
-    final String ipLaptop = "localhost:8000"; 
+    // Ambil token dari memori HP
+    final prefs = await SharedPreferences.getInstance();
+    String? idCustomer = prefs.getString("id_customer");
+    String? token = prefs.getString("token");
+
+    debugPrint("DEBUG: ID yang dikirim ke server adalah -> $idCustomer");
     
-    final response = await http.get(Uri.parse(
-        'http://$ipLaptop:8000/api/wisata/${widget.wisata.idWisata}'));
-    
+    final response = await http.get(
+      Uri.parse(ApiConfig.detailWisata(widget.wisata.idWisata.toString())),
+      headers: {
+        'Accept': 'application/json', // Wajib biar Laravel gak kirim HTML
+        'Authorization': 'Bearer $token', // Biar gak 401 bre!
+      },
+    ).timeout(const Duration(seconds: 10));
+
     if (response.statusCode == 200) {
       var res = jsonDecode(response.body);
-      if (res['status'] == 'success') {
+      if (res['status'] == 'success' && mounted) {
         setState(() {
-          // Mapping data ke model yang baru (yang ada List<EventModel>)[cite: 5, 6]
           _detailWisata = WisataModel.fromJson(res['data']);
+          _listReviews = res['data']['ulasan'] ?? [];
           _isLoading = false;
         });
       }
+    } else if (response.statusCode == 401) {
+      debugPrint("ALARM: Token expired atau gak valid!");
     }
   } catch (e) {
-    debugPrint("Koneksi Error: $e");
-    setState(() => _isLoading = false);
+    debugPrint("Koneksi Hostinger Error: $e");
+    if (mounted) setState(() => _isLoading = false);
   }
 }
+
+  Future<void> _fetchReviews() async {
+    // Fungsi ini dipanggil buat refresh setelah posting review
+    try {
+      var response = await http.get(Uri.parse(ApiConfig.detailWisata(widget.wisata.idWisata)));
+      if (response.statusCode == 200) {
+        var res = jsonDecode(response.body);
+        if (mounted) {
+          setState(() {
+            _listReviews = res['data']['ulasan'] ?? []; 
+          });
+        }
+      }
+    } catch (e) { debugPrint("Refresh Review Gagal: $e"); }
+  }
 
   Future<void> _ambilDataUser() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      namaUserLogin = prefs.getString("nama_customer") ?? "Pengguna";
-    });
-  }
-
-  Future<void> _fetchReviews() async {
-  try {
-    var response = await http.get(
-      Uri.parse('http://localhost:8000/api/wisata/${widget.wisata.idWisata}'),
-      headers: {"Accept": "application/json"},
-    );
-
-    if (response.statusCode == 200) {
-      var res = jsonDecode(response.body);
-      
-      // Masuk ke dalam 'data' dulu
-      var dataUtama = res['data'] ?? {};
-      
-      setState(() {
-        // Langsung hajar masukin ke variabel, gak perlu pakai .cast() lagi
-        _listReviews = dataUtama['ulasan'] ?? []; 
-      });
-      
-      debugPrint("JUMLAH REVIEW DITEMUKAN: ${_listReviews.length}");
+    if (mounted) {
+      setState(() => namaUserLogin = prefs.getString("nama_customer") ?? "Pengguna");
     }
-  } catch (e) {
-    debugPrint("ERROR REFRESH REVIEWS: $e");
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -318,7 +331,7 @@ Future<void> _fetchDetailWisata() async {
 
               // 2. PINDAH KE URL LARAVEL LOKAL
               var response = await http.post(
-                Uri.parse('http://localhost:8000/api/ulasan'), // Sesuaikan route di Laravel
+                Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/api/ulasan'), // Sesuaikan route di Laravel
                 headers: {
                   "Content-Type": "application/json",
                   "Accept": "application/json",

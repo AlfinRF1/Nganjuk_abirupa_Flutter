@@ -44,8 +44,14 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
     String? id = prefs.getString(_keyId);
-    if (id != null) {
+    String? token = prefs.getString(_keyToken); // <-- WAJIB CEK TOKEN JUGA
+
+    // Cuma boleh loncat ke dashboard kalau ID DAN Token-nya sama-sama terisi
+    if (id != null && id.isNotEmpty && token != null && token.isNotEmpty) {
       if (mounted) Navigator.pushReplacementNamed(context, '/dashboard');
+    } else {
+      // Kalau salah satu kosong, paksa bersihin sisa memori lama biar aman
+      await prefs.clear();
     }
   }
 
@@ -62,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      var url = Uri.parse('http://localhost:8000/api/login');
+      var url = Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/api/login');
       var response = await http.post(
         url,
         headers: {"Accept": "application/json", "Content-Type": "application/json"},
@@ -149,7 +155,7 @@ Future<void> _loginWithGoogle() async {
 
       debugPrint("DEBUG: Firebase sukses. Tembak ke Laravel...");
       
-      var url = Uri.parse('http://localhost:8000/api/google-login'); // Pastikan IP Laptop bener!
+      var url = Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/api/google-login'); // Pastikan IP Laptop bener!
       var response = await http.post(
         url,
         headers: {"Accept": "application/json", "Content-Type": "application/json"},

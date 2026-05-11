@@ -45,14 +45,15 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     }
 
     // GANTI KE IP LAPTOP LU![cite: 4]
-    var url = 'http://localhost:8000/api/riwayat?id_customer=$idCustomer';
+    var url = 'https://nganjukabirupa.pbltifnganjuk.com/api/riwayat?id_customer=$idCustomer';
     
-    var response = await http.get(
-      Uri.parse(url),
+    final response = await http.get(
+      Uri.parse(url), 
       headers: {
-        "Accept": "application/json",
-        "Authorization": "Bearer $token", // TEMPEL TOKEN DI SINI
-      }
+        'Content-Type': 'application/json',
+        'Accept': 'application/json', 
+        'Authorization': 'Bearer $token', 
+      },
     );
     
     debugPrint("DEBUG RIWAYAT STATUS: ${response.statusCode}");
@@ -136,7 +137,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     // Pastikan path foldernya sesuai dengan struktur folder 'public' di Laravel lu
     String finalUrl = urlGambar.startsWith('http') 
         ? urlGambar 
-        : 'http://localhost:8000/images/destinasi/$urlGambar'; // Ganti ke IP[cite: 4]
+        : 'https://nganjukabirupa.pbltifnganjuk.com/images/destinasi/$urlGambar'; // Ganti ke IP[cite: 4]
         
     return Image.network(
       finalUrl, 

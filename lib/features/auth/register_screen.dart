@@ -83,7 +83,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     
     try {
       // 1. GANTI KE URL LARAVEL LOKAL LU!
-      var url = Uri.parse('http://localhost:8000/api/register');
+      var url = Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/api/register');
       
       var response = await http.post(
         url,

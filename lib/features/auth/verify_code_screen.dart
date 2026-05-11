@@ -30,7 +30,7 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> {
     print("LOG: Mulai kirim data ke localhost...");
 
     final response = await http.post(
-  Uri.parse('http://localhost:8000/api/verify-otp'), 
+  Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/api/verify-otp'), 
   headers: {
     "Content-Type": "application/json",
     "Accept": "application/json"

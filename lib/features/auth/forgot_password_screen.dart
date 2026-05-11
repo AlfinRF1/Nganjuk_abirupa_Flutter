@@ -93,7 +93,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   try {
                     // 1. NEMBAK KE API LARAVEL LOKAL[cite: 5]
                     final response = await http.post(
-                    Uri.parse('http://localhost:8000/api/forgot-password'), // Ganti jadi localhost
+                    Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/api/forgot-password'), // Ganti jadi localhost
                     headers: {
                       "Content-Type": "application/json",
                       "Accept": "application/json" // Penting buat Laravel[cite: 1]

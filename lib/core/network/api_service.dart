@@ -12,7 +12,7 @@ class ApiService {
           BaseOptions(
             // ✅ UBAH: Gunakan 10.0.2.2 jika pakai Emulator Android
             // Jika pakai HP asli via kabel/WiFi, ganti dengan IP laptop lu (misal: http://192.168.1.15:8000/api/)
-            baseUrl: 'http://localhost:8000/api/', // 
+            baseUrl: 'https://nganjukabirupa.pbltifnganjuk.com/api/', // 
             connectTimeout: const Duration(seconds: 10), 
             receiveTimeout: const Duration(seconds: 10), 
             responseType: ResponseType.json,

@@ -29,23 +29,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadProfileData();
   }
 
-  Future<void> _loadProfileData() async {
+Future<void> _loadProfileData() async {
     final prefs = await SharedPreferences.getInstance();
     String? pathDariDB = prefs.getString("foto"); 
 
     setState(() {
       _nameController.text = prefs.getString("nama_customer") ?? "";
-      _emailController.text = prefs.getString("email") ?? ""; // Sesuaikan kunci email lu
+      _emailController.text = prefs.getString("email") ?? ""; 
 
+      // PENGAMAN ANTI-BADAI BUAT FOTO
       if (pathDariDB != null && pathDariDB.isNotEmpty) {
-        if (pathDariDB.startsWith('http')) {
-          _photoUrl = pathDariDB; 
+        // Bersihin spasi yang gak keliatan
+        String cleanPath = pathDariDB.trim();
+        
+        // GANTI pathDariDB JADI cleanPath DI BAWAH INI BRE:
+        if (cleanPath.startsWith('http')) {
+          _photoUrl = cleanPath; 
         } else {
-          // GANTI KE IP LAPTOP LU! Arahkan ke folder storage/profil[cite: 6, 7]
-          _photoUrl = "http://localhost:8000/storage/profil/$pathDariDB";
+          // PAKAI JALUR BARU (Tanpa /storage)
+          _photoUrl = "https://nganjukabirupa.pbltifnganjuk.com/profil/$cleanPath";
         }
+        
+        // CETAK KE CONSOLE BIAR LU TAU PASTI LINK-NYA APA
+        debugPrint("ALARM PROFIL: URL Foto Fix = $_photoUrl");
       } else {
         _photoUrl = null;
+        debugPrint("ALARM PROFIL: pathDariDB kosong/null dari memori!");
       }
     });
   }
@@ -117,7 +126,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://localhost:8000/api/profile/update'), // URL LARAVEL BARU
+        Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/api/profile/update'), // URL LARAVEL BARU
       );
 
       // TEMPEL TOKEN DI HEADER BIAR GAK UNAUTHENTICATED
@@ -163,7 +172,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       var response = await http.post(
-        Uri.parse('http://localhost:8000/api/profile/hapus-foto'),
+        Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/api/profile/hapus-foto'),
         headers: {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token', // TEMPEL TOKEN
@@ -284,7 +293,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       var response = await http.post(
-        Uri.parse('http://localhost:8000/api/profile/update'), // URL LARAVEL
+        Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/api/profile/update'), // URL LARAVEL
         headers: {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token', // TEMPEL TOKEN
@@ -292,8 +301,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         body: {
           "id_customer": idCustomer,
           "nama_customer": _nameController.text,
-          "email_customer": _emailController.text, // Kirim Email[cite: 7]
-          "password": _passwordController.text, // Kirim Password[cite: 7]
+          "email_customer": _emailController.text, // Kirim Email
+          "password": _passwordController.text, // Kirim Password
         },
       );
 

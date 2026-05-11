@@ -15,13 +15,11 @@ class QrCodeScreen extends StatelessWidget {
   String _getBarcodeImage(int idWisata) {
     switch (idWisata) {
       case 12:
-        return 'assets/images/sedudo.jpeg';
+        return 'assets/images/sedudo.jpeg'; 
       case 13:
         return 'assets/images/tral.jpeg';
       case 14:
         return 'assets/images/goa.jpeg';
-      case 15:
-        return 'assets/images/sritanjung.jpeg';
       default:
         return 'assets/images/barcode_default.jpeg';
     }

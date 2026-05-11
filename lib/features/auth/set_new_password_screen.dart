@@ -36,7 +36,7 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
     try {
       // 1. Tembak API ke Laravel Localhost via ADB
       final response = await http.post(
-        Uri.parse('http://localhost:8000/api/reset-password'),
+        Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/api/reset-password'),
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json" // WAJIB ADA
