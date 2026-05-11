@@ -158,6 +158,7 @@ class _PemesananScreenState extends State<PemesananScreen> {
           builder: (context) => QrCodeScreen(
             totalHarga: totalHarga,
             idWisata: widget.idWisata,
+            idPemesanan: data['id_pemesanan'],
           ),
         ),
       );
