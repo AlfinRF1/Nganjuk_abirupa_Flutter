@@ -3,8 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'pilih_pengunjung_bottomsheet.dart'; // Import file yang baru dibuat tadi
-import 'qr_code_screen.dart'; // Akan kita buat nanti
+import 'pilih_pengunjung_bottomsheet.dart';
+import 'qr_code_screen.dart';
 
 class PemesananScreen extends StatefulWidget {
   final int idWisata;
@@ -100,86 +100,103 @@ class _PemesananScreenState extends State<PemesananScreen> {
   }
 
   Future<void> _prosesPembayaran() async {
-  // 1. Ambil data dari Controller
-  String nama = _namaController.text.trim();
-  String tlp = _teleponController.text.trim();
-  String tgl = _tanggalController.text.trim();
+    // 1. Ambil data dari Controller
+    String nama = _namaController.text.trim();
+    String tlp = _teleponController.text.trim();
+    String tgl = _tanggalController.text.trim();
 
-  // 2. Validasi Dasar
-  if (nama.isEmpty || tlp.isEmpty || tgl.isEmpty || (jumlahDewasa + jumlahAnak == 0)) {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Mohon lengkapi semua data dan pengunjung")));
-    return;
-  }
-
-  setState(() => isLoading = true);
-  debugPrint("DEBUG: Memulai proses pembayaran ke Laravel...");
-
-  try {
-    final prefs = await SharedPreferences.getInstance();
-    String token = prefs.getString("token") ?? "";
-    String idCustomer = prefs.getString("id_customer") ?? "";
-    String emailUser = prefs.getString("email") ?? ""; // Email wajib sesuai gambar DB
-
-    // GANTI dengan IP laptop kamu!
-    final String url = 'https://nganjukabirupa.pbltifnganjuk.com/api/pemesanan';
-
-    debugPrint("DEBUG: Mengirim data ke $url");
-
-    var response = await http.post(
-      Uri.parse(url),
-      headers: {
-        "Accept": "application/json", // Wajib agar Laravel kirim JSON
-        "Authorization": "Bearer $token",
-      },
-      body: {
-        "nama_customer": nama,
-        "tlp_costumer": tlp, // Sesuai typo di database kamu
-        "tanggal": tgl,
-        "jml_tiket": (jumlahDewasa + jumlahAnak).toString(),
-        "harga_total": totalHarga.toString(),
-        "id_wisata": widget.idWisata.toString(),
-        "id_customer": idCustomer,
-        "email": emailUser, // Kolom wajib ke-9
-      },
-    );
-
-    debugPrint("DEBUG: Status Code: ${response.statusCode}");
-    debugPrint("DEBUG: Response Body: ${response.body}");
-
-    final data = jsonDecode(response.body);
-
-    if (response.statusCode == 200 && data['status'] == 'success') {
-      debugPrint("DEBUG: Pemesanan Berhasil, Pindah ke QR Screen.");
-      if (!mounted) return;
-      
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => QrCodeScreen(
-            totalHarga: totalHarga,
-            idWisata: widget.idWisata,
-            idPemesanan: data['id_pemesanan'],
-          ),
+    // 2. Validasi Dasar
+    if (nama.isEmpty ||
+        tlp.isEmpty ||
+        tgl.isEmpty ||
+        (jumlahDewasa + jumlahAnak == 0)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Mohon lengkapi semua data dan pengunjung"),
         ),
       );
-    } else {
-      debugPrint("DEBUG: Server mengembalikan error: ${data['message']}");
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal: ${data['message']}")));
+      return;
     }
-  } catch (e) {
-    debugPrint("DEBUG: ERROR TOTAL: $e");
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Terjadi kesalahan koneksi: $e")));
-  } finally {
-    if (mounted) setState(() => isLoading = false);
+
+    setState(() => isLoading = true);
+    debugPrint("DEBUG: Memulai proses pembayaran ke Laravel...");
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String token = prefs.getString("token") ?? "";
+      String idCustomer = prefs.getString("id_customer") ?? "";
+      String emailUser =
+          prefs.getString("email") ?? ""; // Email wajib sesuai gambar DB
+
+      // GANTI dengan IP laptop kamu!
+      final String url =
+          'https://nganjukabirupa.pbltifnganjuk.com/api/pemesanan';
+
+      debugPrint("DEBUG: Mengirim data ke $url");
+
+      var response = await http.post(
+        Uri.parse(url),
+        headers: {
+          "Accept": "application/json", // Wajib agar Laravel kirim JSON
+          "Authorization": "Bearer $token",
+        },
+        body: {
+          "nama_customer": nama,
+          "tlp_costumer": tlp, // Sesuai typo di database kamu
+          "tanggal": tgl,
+          "jml_tiket": (jumlahDewasa + jumlahAnak).toString(),
+          "harga_total": totalHarga.toString(),
+          "id_wisata": widget.idWisata.toString(),
+          "id_customer": idCustomer,
+          "email": emailUser, // Kolom wajib ke-9
+        },
+      );
+
+      debugPrint("DEBUG: Status Code: ${response.statusCode}");
+      debugPrint("DEBUG: Response Body: ${response.body}");
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['status'] == 'success') {
+        debugPrint("DEBUG: Pemesanan Berhasil, Pindah ke QR Screen.");
+        if (!mounted) return;
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => QrCodeScreen(
+              totalHarga: totalHarga,
+              idWisata: widget.idWisata,
+              idPemesanan: data['id_pemesanan'],
+            ),
+          ),
+        );
+      } else {
+        debugPrint("DEBUG: Server mengembalikan error: ${data['message']}");
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Gagal: ${data['message']}")));
+      }
+    } catch (e) {
+      debugPrint("DEBUG: ERROR TOTAL: $e");
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Terjadi kesalahan koneksi: $e")));
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
     // Number format for IDR
-    final currencyFormat = NumberFormat.currency(locale: 'id', symbol: '', decimalDigits: 0);
+    final currencyFormat = NumberFormat.currency(
+      locale: 'id',
+      symbol: '',
+      decimalDigits: 0,
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -190,7 +207,10 @@ class _PemesananScreenState extends State<PemesananScreen> {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text("Detail Pesanan", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Detail Pesanan",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -201,17 +221,24 @@ class _PemesananScreenState extends State<PemesananScreen> {
             children: [
               // --- FORM INPUT ---
               _buildInputLabel("Nama"),
-              _buildTextField(controller: _namaController, hint: "Nama Lengkap"),
+              _buildTextField(
+                controller: _namaController,
+                hint: "Nama Lengkap",
+              ),
               const SizedBox(height: 16),
-              
+
               _buildInputLabel("Nomor Telepon"),
-              _buildTextField(controller: _teleponController, hint: "+62 123 123 123", isNumber: true),
+              _buildTextField(
+                controller: _teleponController,
+                hint: "+62 123 123 123",
+                isNumber: true,
+              ),
               const SizedBox(height: 16),
 
               _buildInputLabel("Email"),
               _buildTextField(
-                controller: _emailController, 
-                hint: "contoh@email.com", 
+                controller: _emailController,
+                hint: "contoh@email.com",
                 isNumber: false, // Email pake keyboard teks biasa
               ),
               const SizedBox(height: 16),
@@ -229,7 +256,10 @@ class _PemesananScreenState extends State<PemesananScreen> {
                         color: const Color(0xFF2E9FA6),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.calendar_month, color: Colors.white),
+                      child: const Icon(
+                        Icons.calendar_month,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -240,7 +270,10 @@ class _PemesananScreenState extends State<PemesananScreen> {
               GestureDetector(
                 onTap: _showPengunjungSheet,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
@@ -250,10 +283,15 @@ class _PemesananScreenState extends State<PemesananScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                          jumlahDewasa == 0 && jumlahAnak == 0 
-                            ? "Pilih jumlah pengunjung" 
-                            : "${jumlahDewasa.toString().padLeft(2,'0')} Dewasa, ${jumlahAnak.toString().padLeft(2,'0')} Anak",
-                          style: TextStyle(color: (jumlahDewasa == 0 && jumlahAnak == 0) ? Colors.grey : Colors.black, fontSize: 14),
+                          jumlahDewasa == 0 && jumlahAnak == 0
+                              ? "Pilih jumlah pengunjung"
+                              : "${jumlahDewasa.toString().padLeft(2, '0')} Dewasa, ${jumlahAnak.toString().padLeft(2, '0')} Anak",
+                          style: TextStyle(
+                            color: (jumlahDewasa == 0 && jumlahAnak == 0)
+                                ? Colors.grey
+                                : Colors.black,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                       const Icon(Icons.arrow_drop_down, color: Colors.grey),
@@ -272,11 +310,23 @@ class _PemesananScreenState extends State<PemesananScreen> {
                 ),
                 child: Column(
                   children: [
-                    _buildRincianItem("Dewasa", "$jumlahDewasa x ${currencyFormat.format(widget.hargaDewasa)}", totalHargaDewasa),
+                    _buildRincianItem(
+                      "Dewasa",
+                      "$jumlahDewasa x ${currencyFormat.format(widget.hargaDewasa)}",
+                      totalHargaDewasa,
+                    ),
                     const SizedBox(height: 8),
-                    _buildRincianItem("Anak", "$jumlahAnak x ${currencyFormat.format(widget.hargaAnak)}", totalHargaAnak),
+                    _buildRincianItem(
+                      "Anak",
+                      "$jumlahAnak x ${currencyFormat.format(widget.hargaAnak)}",
+                      totalHargaAnak,
+                    ),
                     const SizedBox(height: 8),
-                    _buildRincianItem("Asuransi", "${(jumlahDewasa + jumlahAnak)} x ${currencyFormat.format(widget.tarifAsuransi)}", totalAsuransi),
+                    _buildRincianItem(
+                      "Asuransi",
+                      "${(jumlahDewasa + jumlahAnak)} x ${currencyFormat.format(widget.tarifAsuransi)}",
+                      totalAsuransi,
+                    ),
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 12),
                       child: Divider(),
@@ -284,11 +334,23 @@ class _PemesananScreenState extends State<PemesananScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text("Total", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        Text("Rp ${currencyFormat.format(totalHarga)}", 
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF2E9FA6))),
+                        const Text(
+                          "Total",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          "Rp ${currencyFormat.format(totalHarga)}",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Color(0xFF2E9FA6),
+                          ),
+                        ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -301,12 +363,28 @@ class _PemesananScreenState extends State<PemesananScreen> {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2E9FA6),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   onPressed: isLoading ? null : _prosesPembayaran,
-                  child: isLoading 
-                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text("Bayar sekarang", style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          "Bayar sekarang",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
             ],
@@ -319,11 +397,23 @@ class _PemesananScreenState extends State<PemesananScreen> {
   Widget _buildInputLabel(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8, left: 4),
-      child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.black87)),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+          color: Colors.black87,
+        ),
+      ),
     );
   }
 
-  Widget _buildTextField({required TextEditingController controller, required String hint, bool isNumber = false, Widget? suffixIcon}) {
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hint,
+    bool isNumber = false,
+    Widget? suffixIcon,
+  }) {
     return TextField(
       controller: controller,
       keyboardType: isNumber ? TextInputType.phone : TextInputType.text,
@@ -332,7 +422,10 @@ class _PemesananScreenState extends State<PemesananScreen> {
         hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey[300]!),
@@ -351,12 +444,25 @@ class _PemesananScreenState extends State<PemesananScreen> {
   }
 
   Widget _buildRincianItem(String label, String subLabel, int price) {
-    final currencyFormat = NumberFormat.currency(locale: 'id', symbol: '', decimalDigits: 0);
+    final currencyFormat = NumberFormat.currency(
+      locale: 'id',
+      symbol: '',
+      decimalDigits: 0,
+    );
     return Row(
       children: [
-        Expanded(flex: 2, child: Text(label, style: const TextStyle(color: Colors.black87))),
-        Expanded(flex: 3, child: Text(subLabel, style: const TextStyle(color: Colors.grey))),
-        Text(price == 0 ? "-" : currencyFormat.format(price), style: const TextStyle(color: Colors.black87)),
+        Expanded(
+          flex: 2,
+          child: Text(label, style: const TextStyle(color: Colors.black87)),
+        ),
+        Expanded(
+          flex: 3,
+          child: Text(subLabel, style: const TextStyle(color: Colors.grey)),
+        ),
+        Text(
+          price == 0 ? "-" : currencyFormat.format(price),
+          style: const TextStyle(color: Colors.black87),
+        ),
       ],
     );
   }

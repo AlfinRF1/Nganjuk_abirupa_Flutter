@@ -13,10 +13,12 @@ class PilihPengunjungBottomSheet extends StatefulWidget {
   });
 
   @override
-  _PilihPengunjungBottomSheetState createState() => _PilihPengunjungBottomSheetState();
+  _PilihPengunjungBottomSheetState createState() =>
+      _PilihPengunjungBottomSheetState();
 }
 
-class _PilihPengunjungBottomSheetState extends State<PilihPengunjungBottomSheet> {
+class _PilihPengunjungBottomSheetState
+    extends State<PilihPengunjungBottomSheet> {
   late int countDewasa;
   late int countAnak;
 
@@ -48,12 +50,16 @@ class _PilihPengunjungBottomSheetState extends State<PilihPengunjungBottomSheet>
             ),
           ),
           const SizedBox(height: 20),
-          
+
           // Header
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back_ios, size: 20, color: Color(0xFF2E9FA6)),
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  size: 20,
+                  color: Color(0xFF2E9FA6),
+                ),
                 onPressed: () => Navigator.pop(context),
               ),
               const Expanded(
@@ -105,15 +111,28 @@ class _PilihPengunjungBottomSheetState extends State<PilihPengunjungBottomSheet>
               children: [
                 Row(
                   children: const [
-                    Icon(Icons.info_outline, color: Color(0xFF2E9FA6), size: 20),
+                    Icon(
+                      Icons.info_outline,
+                      color: Color(0xFF2E9FA6),
+                      size: 20,
+                    ),
                     SizedBox(width: 8),
-                    Text("Ketentuan Pemesanan Tiket", style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text(
+                      "Ketentuan Pemesanan Tiket",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
-                _buildInfoItem("Validitas Tiket: Hanya berlaku untuk tanggal kunjungan yang dipilih."),
-                _buildInfoItem("Pembatalan: Tiket yang sudah dibeli tidak dapat dibatalkan, diubah tanggal, atau diuangkan kembali (non-refundable)."),
-                _buildInfoItem("Usia Pengunjung:\n• Dewasa: 10 tahun ke atas.\n• Anak-anak: di bawah 10 tahun."),
+                _buildInfoItem(
+                  "Validitas Tiket: Hanya berlaku untuk tanggal kunjungan yang dipilih.",
+                ),
+                _buildInfoItem(
+                  "Pembatalan: Tiket yang sudah dibeli tidak dapat dibatalkan, diubah tanggal, atau diuangkan kembali (non-refundable).",
+                ),
+                _buildInfoItem(
+                  "Usia Pengunjung:\n• Dewasa: 10 tahun ke atas.\n• Anak-anak: di bawah 10 tahun.",
+                ),
               ],
             ),
           ),
@@ -126,7 +145,9 @@ class _PilihPengunjungBottomSheetState extends State<PilihPengunjungBottomSheet>
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2E9FA6),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               onPressed: () {
                 if (countDewasa == 0 && countAnak == 0) {
@@ -138,7 +159,14 @@ class _PilihPengunjungBottomSheetState extends State<PilihPengunjungBottomSheet>
                 widget.onSimpan(countDewasa, countAnak);
                 Navigator.pop(context);
               },
-              child: const Text("Simpan", style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
+              child: const Text(
+                "Simpan",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
         ],
@@ -146,15 +174,27 @@ class _PilihPengunjungBottomSheetState extends State<PilihPengunjungBottomSheet>
     );
   }
 
-  Widget _buildCounterRow({required String title, required String subtitle, required int count, required VoidCallback onMin, required VoidCallback onPlus}) {
+  Widget _buildCounterRow({
+    required String title,
+    required String subtitle,
+    required int count,
+    required VoidCallback onMin,
+    required VoidCallback onPlus,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            Text(subtitle, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+            Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            Text(
+              subtitle,
+              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+            ),
           ],
         ),
         Row(
@@ -166,14 +206,20 @@ class _PilihPengunjungBottomSheetState extends State<PilihPengunjungBottomSheet>
             Container(
               width: 40,
               alignment: Alignment.center,
-              child: Text(count.toString().padLeft(2, '0'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              child: Text(
+                count.toString().padLeft(2, '0'),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
             ),
             IconButton(
               icon: const Icon(Icons.add_circle, color: Color(0xFF2E9FA6)),
               onPressed: onPlus,
             ),
           ],
-        )
+        ),
       ],
     );
   }
@@ -185,7 +231,12 @@ class _PilihPengunjungBottomSheetState extends State<PilihPengunjungBottomSheet>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text("• ", style: TextStyle(fontSize: 14)),
-          Expanded(child: Text(text, style: TextStyle(fontSize: 12, color: Colors.grey[700]))),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+            ),
+          ),
         ],
       ),
     );

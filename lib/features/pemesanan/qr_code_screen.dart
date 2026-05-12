@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:http/http.dart' as http; // <--- WAJIB IMPORT INI
-import 'dart:convert';                   // <--- WAJIB IMPORT INI
-import 'package:shared_preferences/shared_preferences.dart'; // <--- WAJIB IMPORT INI
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class QrCodeScreen extends StatelessWidget {
   final int totalHarga;
@@ -20,12 +20,12 @@ class QrCodeScreen extends StatelessWidget {
   String _getBarcodeImage(int idWisata) {
     switch (idWisata) {
       case 12:
-        return 'assets/images/sedudo.jpeg'; 
+        return 'assets/images/sedudo.jpeg';
       case 14:
         return 'assets/images/goa.jpeg';
       case 15:
         // Sri Tanjung dibalikin lagi gambarnya
-        return 'assets/images/sri_tanjung.png'; 
+        return 'assets/images/sri_tanjung.png';
       case 16:
         return 'assets/images/tral.jpeg';
       default:
@@ -35,7 +35,11 @@ class QrCodeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(locale: 'id', symbol: '', decimalDigits: 0);
+    final currencyFormat = NumberFormat.currency(
+      locale: 'id',
+      symbol: '',
+      decimalDigits: 0,
+    );
     String targetAsset = _getBarcodeImage(idWisata);
 
     return Scaffold(
@@ -58,23 +62,33 @@ class QrCodeScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       GestureDetector(
-                        onTap: () => Navigator.pop(context), 
-                        child: const Icon(Icons.arrow_back, color: Color(0xFF2E9FA6)),
+                        onTap: () => Navigator.pop(context),
+                        child: const Icon(
+                          Icons.arrow_back,
+                          color: Color(0xFF2E9FA6),
+                        ),
                       ),
                       Expanded(
                         child: Column(
                           children: [
                             const Text(
                               "Pembayaran Tiket",
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              idWisata == 15 
-                                  ? "Konfirmasi pesanan Anda" 
+                              idWisata == 15
+                                  ? "Konfirmasi pesanan Anda"
                                   : "scan barcode untuk melakukan\npembayaran",
                               textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
                             ),
                           ],
                         ),
@@ -103,16 +117,27 @@ class QrCodeScreen extends StatelessWidget {
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.qr_code_2, size: 80, color: Colors.black54),
+                                  const Icon(
+                                    Icons.qr_code_2,
+                                    size: 80,
+                                    color: Colors.black54,
+                                  ),
                                   const SizedBox(height: 8),
                                   const Text(
                                     "GAGAL MEMUAT ASSET:",
-                                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.red),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.red,
+                                    ),
                                   ),
                                   Text(
                                     "$targetAsset\n(ID diterima: $idWisata)",
                                     textAlign: TextAlign.center,
-                                    style: const TextStyle(fontSize: 11, color: Colors.red),
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.red,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -126,7 +151,10 @@ class QrCodeScreen extends StatelessWidget {
                     // --- TAMPILAN PENGGANTI KHUSUS SRI TANJUNG (ID 15) ---
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 30,
+                        horizontal: 20,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.grey[100],
                         borderRadius: BorderRadius.circular(12),
@@ -134,12 +162,20 @@ class QrCodeScreen extends StatelessWidget {
                       ),
                       child: const Column(
                         children: [
-                          Icon(Icons.info_outline, size: 50, color: Color(0xFF2E9FA6)),
+                          Icon(
+                            Icons.info_outline,
+                            size: 50,
+                            color: Color(0xFF2E9FA6),
+                          ),
                           SizedBox(height: 12),
                           Text(
                             "Wisata ini tidak menggunakan\npembayaran via QR Code.",
                             textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.w500),
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ],
                       ),
@@ -150,7 +186,10 @@ class QrCodeScreen extends StatelessWidget {
                   // --- TOTAL HARGA ---
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 20,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFD0F0EE),
                       borderRadius: BorderRadius.circular(12),
@@ -158,10 +197,20 @@ class QrCodeScreen extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text("Total :", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        const Text(
+                          "Total :",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         Text(
                           "Rp. ${currencyFormat.format(totalHarga)}",
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2E9FA6)),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2E9FA6),
+                          ),
                         ),
                       ],
                     ),
@@ -174,15 +223,24 @@ class QrCodeScreen extends StatelessWidget {
                     height: 50,
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.pushNamedAndRemoveUntil(context, '/riwayat', (route) => false);
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/riwayat',
+                          (route) => false,
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF2E9FA6),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: const Text(
                         "Konfirmasi Pembayaran",
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -199,7 +257,9 @@ class QrCodeScreen extends StatelessWidget {
                           showDialog(
                             context: context,
                             barrierDismissible: false,
-                            builder: (c) => const Center(child: CircularProgressIndicator()),
+                            builder: (c) => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
                           );
 
                           // 2. Ambil token aman dari memori
@@ -208,14 +268,14 @@ class QrCodeScreen extends StatelessWidget {
 
                           // 3. Tembak API Batal/Hapus ke server Hostinger
                           var response = await http.post(
-                            Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/api/pemesanan/batal'), // URL valid sesuai file server
+                            Uri.parse(
+                              'https://nganjukabirupa.pbltifnganjuk.com/api/pemesanan/batal',
+                            ), // URL valid sesuai file server
                             headers: {
                               'Accept': 'application/json',
                               'Authorization': 'Bearer $token',
                             },
-                            body: {
-                              'id_pemesanan': idPemesanan.toString(),
-                            },
+                            body: {'id_pemesanan': idPemesanan.toString()},
                           );
 
                           // Tutup dialog loading
@@ -226,7 +286,9 @@ class QrCodeScreen extends StatelessWidget {
                           if (res['status'] == 'success') {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Pesanan berhasil dibatalkan")),
+                                const SnackBar(
+                                  content: Text("Pesanan berhasil dibatalkan"),
+                                ),
                               );
                               // Tutup layar QR Code dan kembali ke form
                               Navigator.pop(context);
@@ -234,7 +296,11 @@ class QrCodeScreen extends StatelessWidget {
                           } else {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Gagal membatalkan: ${res['message']}")),
+                                SnackBar(
+                                  content: Text(
+                                    "Gagal membatalkan: ${res['message']}",
+                                  ),
+                                ),
                               );
                               Navigator.pop(context); // Tetap tutup layarnya
                             }
@@ -248,11 +314,16 @@ class QrCodeScreen extends StatelessWidget {
                       },
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.red),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: const Text(
                         "Batalkan",
-                        style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
