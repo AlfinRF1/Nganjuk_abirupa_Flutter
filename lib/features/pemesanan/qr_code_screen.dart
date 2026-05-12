@@ -21,10 +21,11 @@ class QrCodeScreen extends StatelessWidget {
     switch (idWisata) {
       case 12:
         return 'assets/images/sedudo.jpeg'; 
-      case 13:
-        return 'assets/images/roro_kuning.jpeg'; 
       case 14:
         return 'assets/images/goa.jpeg';
+      case 15:
+        // Sri Tanjung dibalikin lagi gambarnya
+        return 'assets/images/sri_tanjung.png'; 
       case 16:
         return 'assets/images/tral.jpeg';
       default:
