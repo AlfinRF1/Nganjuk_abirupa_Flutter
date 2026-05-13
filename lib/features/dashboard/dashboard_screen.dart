@@ -252,6 +252,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               color: Colors.grey[300],
               child: const Icon(Icons.image_not_supported, color: Colors.grey),
             )
+
+            //gambar  
           : CachedNetworkImage(
               imageUrl: wisata.gambar,
               width: 100,
