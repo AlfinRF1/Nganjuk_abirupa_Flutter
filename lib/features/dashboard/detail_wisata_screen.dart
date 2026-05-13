@@ -301,104 +301,166 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
 );
 }
 
-  // --- 3. LOGIKA TAMBAH REVIEW OTOMATIS ---
+  // --- 3. LOGIKA TAMBAH REVIEW OTOMATIS (UPDATED) ---
   Widget _buildReviewsTab(BuildContext context, Color cardColor, Color textColor) { 
-  return ListView(
-    padding: const EdgeInsets.all(16),
-    children: [
-      // TOMBOL TULIS REVIEW
-      InkWell(
-        borderRadius: BorderRadius.circular(25),
-        onTap: () async {
-          final hasilReview = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const TambahReviewScreen()),
-          );
-
-          if (hasilReview != null && hasilReview.toString().isNotEmpty) {
-            // 1. TAMPILIN LOADING DIALOG
-            showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (context) => const Center(
-                child: CircularProgressIndicator(color: Color(0xFF0BB5A7)),
-              ),
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // TOMBOL TULIS REVIEW (Tetap sama seperti logika Anda)
+        InkWell(
+          borderRadius: BorderRadius.circular(25),
+          onTap: () async {
+            final hasilReview = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const TambahReviewScreen()),
             );
 
-            try {
-              final prefs = await SharedPreferences.getInstance();
-              String idCustomer = prefs.getString("id_customer") ?? "0";
-
-              // 2. PINDAH KE URL LARAVEL LOKAL
-              var response = await http.post(
-                Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/api/ulasan'), // Sesuaikan route di Laravel
-                headers: {
-                  "Content-Type": "application/json",
-                  "Accept": "application/json",
-                },
-                body: jsonEncode({
-                  "id_wisata": widget.wisata.idWisata,
-                  "id_customer": idCustomer,
-                  "ulasan": hasilReview // Sesuai nama kolom di DB lu
-                }),
+            if (hasilReview != null && hasilReview.toString().isNotEmpty) {
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF0BB5A7)),
+                ),
               );
 
-              if (mounted) Navigator.pop(context); // NUTUP LOADING
+              try {
+                final prefs = await SharedPreferences.getInstance();
+                String idCustomer = prefs.getString("id_customer") ?? "0";
 
-              if (response.statusCode == 200 || response.statusCode == 201) {
-                await _fetchReviews(); // Refresh data ulasan
+                var response = await http.post(
+                  Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/api/ulasan'),
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                  },
+                  body: jsonEncode({
+                    "id_wisata": widget.wisata.idWisata,
+                    "id_customer": idCustomer,
+                    "ulasan": hasilReview 
+                  }),
+                );
+
+                if (mounted) Navigator.pop(context); 
+
+                if (response.statusCode == 200 || response.statusCode == 201) {
+                  await _fetchReviews(); 
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Review berhasil diposting!'), backgroundColor: Colors.green),
+                    );
+                  }
+                } else {
+                  debugPrint("Gagal posting review: ${response.body}");
+                }
+              } catch (e) {
+                if (mounted) Navigator.pop(context); 
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Review berhasil diposting!'), backgroundColor: Colors.green),
+                    SnackBar(content: Text('Gagal terhubung ke server: $e'), backgroundColor: Colors.red),
                   );
                 }
-              } else {
-                debugPrint("Gagal posting review: ${response.body}");
-              }
-            } catch (e) {
-              if (mounted) Navigator.pop(context); // NUTUP LOADING JIKA ERROR
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Gagal terhubung ke server: $e'), backgroundColor: Colors.red),
-                );
               }
             }
-          }
-        },
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white, 
-            borderRadius: BorderRadius.circular(25), 
-            border: Border.all(color: Colors.grey.shade300)
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white, 
+              borderRadius: BorderRadius.circular(25), 
+              border: Border.all(color: Colors.grey.shade300)
+            ),
+            child: const Text("Tulis Review di sini", style: TextStyle(color: Colors.grey)),
           ),
-          child: const Text("Tulis Review di sini", style: TextStyle(color: Colors.grey)),
         ),
-      ),
-      const SizedBox(height: 16),
+        const SizedBox(height: 16),
 
-      ..._listReviews.map((review) {
-  // 1. Definisikan dataReview dengan tipe yang jelas agar operator [] bisa dipakai
-  final Map<String, dynamic> dataReview = review as Map<String, dynamic>; 
-  
-  // 2. Ambil data customer, casting juga sebagai Map
-  final Map<String, dynamic> customer = (dataReview["customer"] ?? {}) as Map<String, dynamic>;
-  
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: _buildReviewCard(
-      cardColor, 
-      textColor, 
-      customer["nama_customer"]?.toString() ?? "Anonim",
-      dataReview["tanggal"]?.toString() ?? "-",
-      dataReview["ulasan"]?.toString() ?? "",
-      customer["foto"]?.toString() ?? ""
-    ),
-  );
-}),
-    ],
-  );
-}
+        // LOGIKA PEMETAAN REVIEW YANG LEBIH RAMPING
+        ..._listReviews.map((review) {
+          final Map<String, dynamic> dataReview = review as Map<String, dynamic>; 
+          final Map<String, dynamic> customer = (dataReview["customer"] ?? {}) as Map<String, dynamic>;
+          
+          // Langsung tangkap URL matang dari API Laravel Anda
+          String fotoUrlDariApi = customer["foto"]?.toString() ?? "";
+
+          debugPrint("Cek URL Foto Ulasan: '$fotoUrlDariApi'");
+          
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _buildReviewCard(
+              cardColor, 
+              textColor, 
+              customer["nama_customer"]?.toString() ?? "Anonim",
+              dataReview["tanggal"]?.toString() ?? "-",
+              dataReview["ulasan"]?.toString() ?? "",
+              fotoUrlDariApi // <--- Langsung teruskan URL aslinya
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  // --- WIDGET REVIEW CARD TAHAN BANTING (MENGGUNAKAN CACHED NETWORK IMAGE) ---
+  Widget _buildReviewCard(Color bgColor, Color textColor, String name, String date, String review, String avatarUrl) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(12)),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // MENGGANTIKAN CIRCLE AVATAR DENGAN CLIPRRECT + CACHED NETWORK IMAGE
+          ClipRRect(
+            borderRadius: BorderRadius.circular(50),
+            child: avatarUrl.isNotEmpty && avatarUrl != "null"
+                ? CachedNetworkImage(
+                    imageUrl: avatarUrl,
+                    width: 32,
+                    height: 32,
+                    fit: BoxFit.cover,
+                    // Indikator memutar kecil saat gambar sedang diunduh
+                    placeholder: (context, url) => Container(
+                      width: 32, height: 32,
+                      color: Colors.grey.shade200,
+                      child: const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF0BB5A7)),
+                      ),
+                    ),
+                    // Pengaman Mutlak: Jika link URL mati atau file terhapus di server, otomatis tampilkan ikon abu-abu
+                    errorWidget: (context, url, error) => Container(
+                      width: 32, height: 32,
+                      color: Colors.grey.shade300,
+                      child: const Icon(Icons.person, size: 20, color: Colors.grey),
+                    ),
+                  )
+                : Container(
+                    width: 32, height: 32,
+                    color: Colors.grey.shade300,
+                    child: const Icon(Icons.person, size: 20, color: Colors.grey),
+                  ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textColor)),
+                    Text(date, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(review, style: TextStyle(fontSize: 12, color: textColor, height: 1.4)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
 
   Widget _buildInfoCard(Color bgColor, Color textColor, IconData icon, String title, String content) {
@@ -419,43 +481,6 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
           Padding(
             padding: const EdgeInsets.only(left: 26), 
             child: Text(content, style: TextStyle(fontSize: 12, color: textColor, height: 1.4)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildReviewCard(Color bgColor, Color textColor, String name, String date, String review, String avatarUrl) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(12)),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-          radius: 16,
-          backgroundColor: Colors.grey.shade300,
-          // Kalau string gak kosong, load gambarnya. Kalau kosong, null (gak load gambar)
-          backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
-          // Kalau string kosong, tampilin icon orang warna abu-abu
-          child: avatarUrl.isEmpty ? const Icon(Icons.person, size: 20, color: Colors.grey) : null,
-        ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textColor)),
-                    Text(date, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(review, style: TextStyle(fontSize: 12, color: textColor, height: 1.4)),
-              ],
-            ),
           ),
         ],
       ),
