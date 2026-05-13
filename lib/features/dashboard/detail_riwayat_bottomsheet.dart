@@ -13,8 +13,8 @@ class DetailRiwayatBottomSheet extends StatelessWidget {
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'selesai': return Colors.green;
-      case 'menunggu': return Colors.orange;
+      case 'lunas': return Colors.green;
+      case 'belum lunas': return const Color.fromARGB(255, 255, 0, 0);
       default: return Colors.grey;
     }
   }
@@ -33,6 +33,11 @@ class DetailRiwayatBottomSheet extends StatelessWidget {
     } catch (e) {
       tglFormatted = data['tanggal'].toString();
     }
+
+    // Cek apakah API mereturn spesifik 'nama_customer' di item transaksi ini.
+    // Jika ada dan tidak kosong, gunakan itu. Jika tidak ada, gunakan nama akun login.
+    String namaDariApi = data['nama_customer']?.toString().trim() ?? '';
+    String namaTampil = namaDariApi.isNotEmpty ? namaDariApi : namaCustomer;
 
     // 1. AMBIL TINGGI LAYAR HP
     double screenHeight = MediaQuery.of(context).size.height;
@@ -73,11 +78,12 @@ class DetailRiwayatBottomSheet extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text("Nama Wisata", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                Text(data['nama_wisata'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                Text(data['lokasi'], style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                Text(data['nama_wisata'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(data['lokasi'] ?? '', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
                 const Divider(height: 24),
                 
-                _buildRowDetail("Nama", namaCustomer),
+                // Gunakan variabel dinamis namaTampil di sini:
+                _buildRowDetail("Nama", namaTampil),
                 _buildRowDetail("ID Transaksi", "#TX${data['id_transaksi']}"),
                 _buildRowDetail("Tanggal", tglFormatted),
                 
@@ -99,13 +105,13 @@ class DetailRiwayatBottomSheet extends StatelessWidget {
                     ],
                   ),
                 ),
-                _buildRowDetail("Metode", data['metode_pembayaran']),
+                _buildRowDetail("Metode", data['metode_pembayaran'] ?? '-'),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text("Total", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                    Text("Rp. ${currencyFormat.format(data['total_harga'])}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    Text("Rp. ${currencyFormat.format(data['total_harga'] ?? 0)}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   ],
                 ),
               ],
@@ -113,7 +119,6 @@ class DetailRiwayatBottomSheet extends StatelessWidget {
           ),
           
           // 3. PENDORONG AJAIB (SPACER)
-          // Ini bakal ngisi sisa ruang kosong di tengah dan ngedorong footer ke bawah!
           const Spacer(),
 
           // --- FOOTER ---

@@ -44,7 +44,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
       return;
     }
 
-    // GANTI KE IP LAPTOP LU![cite: 4]
+    // GANTI KE IP LAPTOP LU!
     var url = 'https://nganjukabirupa.pbltifnganjuk.com/api/riwayat?id_customer=$idCustomer';
     
     final response = await http.get(
@@ -63,7 +63,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
       var data = jsonDecode(response.body);
       List<dynamic> list = [];
 
-      // Laravel lu nge-return langsung array [ ... ], bukan objek { status: success, data: [ ... ] }[cite: 5]
+      // Laravel lu nge-return langsung array [ ... ], bukan objek { status: success, data: [ ... ] }
       // Jadi kita handle biar Flutter nggak bingung.
       if (data is List) {
         list = data; 
@@ -80,7 +80,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
       setState(() {
         _riwayatList = list;
-        _filteredList = list; // INI YANG MUNCULIN DATA KE LAYAR[cite: 4]
+        _filteredList = list; // INI YANG MUNCULIN DATA KE LAYAR
       });
 
       for (var item in list) {
@@ -137,7 +137,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     // Pastikan path foldernya sesuai dengan struktur folder 'public' di Laravel lu
     String finalUrl = urlGambar.startsWith('http') 
         ? urlGambar 
-        : 'https://nganjukabirupa.pbltifnganjuk.com/images/destinasi/$urlGambar'; // Ganti ke IP[cite: 4]
+        : 'https://nganjukabirupa.pbltifnganjuk.com/images/destinasi/$urlGambar'; // Ganti ke IP
         
     return Image.network(
       finalUrl, 
@@ -203,73 +203,82 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                 ),
               ),
 
+            // --- FITUR PULL-TO-REFRESH DISEMATKAN DI SINI ---
             Expanded(
-              child: _isLoading ? const Center(child: CircularProgressIndicator()) : ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: _filteredList.length,
-                itemBuilder: (c, i) {
-  var item = _filteredList[i];
-  // Parsing Tanggal (biar gak nampilin DD/MM/YYYY lagi)
-  String tglFormatted = "-";
-  try {
-    DateTime dt = DateTime.parse(item['tanggal'].toString());
-    tglFormatted = DateFormat('dd/MM/yyyy').format(dt);
-  } catch (e) { tglFormatted = item['tanggal'].toString(); }
+              child: _isLoading 
+                ? const Center(child: CircularProgressIndicator()) 
+                : RefreshIndicator(
+                    onRefresh: _loadRiwayat, // Tarik layar ke bawah langsung manggil fungsi load ulang
+                    color: const Color(0xFF2E9FA6),
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _filteredList.length,
+                      // Wajib pakai physics ini biar list pendek tetep bisa ditarik ke bawah
+                      physics: const AlwaysScrollableScrollPhysics(), 
+                      itemBuilder: (c, i) {
+                        var item = _filteredList[i];
+                        // Parsing Tanggal (biar gak nampilin DD/MM/YYYY lagi)
+                        String tglFormatted = "-";
+                        try {
+                          DateTime dt = DateTime.parse(item['tanggal'].toString());
+                          tglFormatted = DateFormat('dd/MM/yyyy').format(dt);
+                        } catch (e) { tglFormatted = item['tanggal'].toString(); }
 
-  return GestureDetector(
-    onTap: () => showModalBottomSheet(
-      context: context, 
-      backgroundColor: Colors.transparent, 
-      builder: (c) => DetailRiwayatBottomSheet(data: item, namaCustomer: _namaCustomer)
-    ),
-    child: Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white, 
-        borderRadius: BorderRadius.circular(12), 
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Gambar Wisata
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8), 
-            child: SizedBox(width: 100, height: 100, child: _buildWisataImage(item['nama_wisata'], item['gambar'] ?? ''))
-          ),
-          const SizedBox(width: 12),
-          // Info Teks
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const SizedBox(), // Spacer
-                    Text(tglFormatted, style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-                Text(item['nama_wisata'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                Text(item['lokasi'], style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                const SizedBox(height: 20),
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: Text(
-                    "Total 1 tiket : Rp.${currencyFormat.format(item['total_harga'])}", 
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)
+                        return GestureDetector(
+                          onTap: () => showModalBottomSheet(
+                            context: context, 
+                            backgroundColor: Colors.transparent, 
+                            builder: (c) => DetailRiwayatBottomSheet(data: item, namaCustomer: _namaCustomer)
+                          ),
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white, 
+                              borderRadius: BorderRadius.circular(12), 
+                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Gambar Wisata
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8), 
+                                  child: SizedBox(width: 100, height: 100, child: _buildWisataImage(item['nama_wisata'], item['gambar'] ?? ''))
+                                ),
+                                const SizedBox(width: 12),
+                                // Info Teks
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const SizedBox(), // Spacer
+                                          Text(tglFormatted, style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
+                                        ],
+                                      ),
+                                      Text(item['nama_wisata'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                      Text(item['lokasi'], style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                                      const SizedBox(height: 20),
+                                      Align(
+                                        alignment: Alignment.bottomRight,
+                                        child: Text(
+                                          "Total 1 tiket : Rp.${currencyFormat.format(item['total_harga'])}", 
+                                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                    ),
-                    ],
-                    ),
-                    ),
-                    ],
                   ),
-                ),
-              );
-            },
-            ),
             ),
           ],
         ),
