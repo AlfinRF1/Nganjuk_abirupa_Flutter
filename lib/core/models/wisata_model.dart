@@ -57,7 +57,7 @@ class WisataModel {
   final String deskripsi;
   final String gambar;
   final List<EventModel> events;
-  final List<ReviewModel> reviews; // <--- TAMBAHKAN INI
+  final List<ReviewModel> reviews;
 
   WisataModel({
     required this.idWisata,
@@ -70,7 +70,7 @@ class WisataModel {
     required this.deskripsi,
     required this.gambar,
     required this.events,
-    required this.reviews, // <--- TAMBAHKAN INI[cite: 5]
+    required this.reviews,
   });
 
   factory WisataModel.fromJson(Map<String, dynamic> json) {
@@ -91,12 +91,12 @@ class WisataModel {
       deskripsi: json['deskripsi'] ?? '',
       gambar: json['gambar'] ?? '',
       
-      // PARSING DATA GALERI[cite: 5]
+      // PARSING DATA GALERI
       events: (json['galeri'] as List? ?? [])
           .map((e) => EventModel.fromJson(e as Map<String, dynamic>))
           .toList(),
           
-      // PARSING DATA ULASAN (Mapping dari key 'ulasan' di JSON Laravel)[cite: 5]
+      // PARSING DATA ULASAN
       reviews: (json['ulasan'] as List? ?? [])
           .map((r) => ReviewModel.fromJson(r as Map<String, dynamic>))
           .toList(),

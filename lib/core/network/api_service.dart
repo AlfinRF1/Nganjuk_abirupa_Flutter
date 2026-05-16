@@ -10,8 +10,6 @@ class ApiService {
   ApiService()
       : _dio = Dio(
           BaseOptions(
-            // ✅ UBAH: Gunakan 10.0.2.2 jika pakai Emulator Android
-            // Jika pakai HP asli via kabel/WiFi, ganti dengan IP laptop lu (misal: http://192.168.1.15:8000/api/)
             baseUrl: 'https://nganjukabirupa.pbltifnganjuk.com/api/', // 
             connectTimeout: const Duration(seconds: 10), 
             receiveTimeout: const Duration(seconds: 10), 
@@ -19,9 +17,7 @@ class ApiService {
           ),
         );
 
-// lib/network/api_service.dart
-
-// Tambahkan fungsi login
+// fungsi login
 Future<Map<String, dynamic>> login(String nama, String password) async {
   try {
     final response = await _dio.post("login", data: {
@@ -30,7 +26,7 @@ Future<Map<String, dynamic>> login(String nama, String password) async {
     });
 
     if (response.data['success'] == true) {
-      // Simpan token di sini jika perlu (pakai shared_preferences)
+      // Simpan token pakai shared_preferences
       return response.data; 
     } else {
       throw Exception(response.data['message']);
@@ -40,7 +36,7 @@ Future<Map<String, dynamic>> login(String nama, String password) async {
   }
 }
 
-// Fungsi Logout (Butuh Token)
+// Fungsi Logout
 Future<void> logout(String token) async {
   try {
     await _dio.post("logout", 
@@ -50,13 +46,10 @@ Future<void> logout(String token) async {
     throw Exception("Gagal Logout");
   }
 }
-  // ==========================================
+
   // 1. FITUR REGISTRASI
-  // ==========================================
   Future<RegisterResponse> register(RegisterRequest request) async {
     try {
-      // ✅ UBAH: Hilangkan ".php". Sesuaikan dengan route di routes/api.php Laravel lu
-      // Misal di Laravel: Route::post('/register', [AuthController::class, 'register']);
       final response = await _dio.post("register", data: request.toJson());
       
       return RegisterResponse.fromJson(response.data);
@@ -67,12 +60,9 @@ Future<void> logout(String token) async {
     }
   }
 
-  // ==========================================
   // 2. FITUR GET WISATA (Untuk Dashboard)
-  // ==========================================
   Future<List<WisataModel>> getAllWisata() async {
     try {
-      // ✅ UBAH: Dari "get_all_wisata.php" menjadi "wisata" aja
       final response = await _dio.get("wisata");
 
       if (response.statusCode == 200) {

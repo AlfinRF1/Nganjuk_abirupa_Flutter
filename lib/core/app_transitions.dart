@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 
 class AppTransitions {
-  // 1. Slide Up (Sesuai slide_up.xml)
+  // 1. Slide Up
   static Route slideUp(Widget page) {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionDuration: const Duration(milliseconds: 500),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset(0.0, 1.0); // dari bawah (100%)
-        const end = Offset.zero;        // ke tempat semula (0%)
-        // decelerate_quad di Android setara dengan easeOutQuad di Flutter
+        const begin = Offset(0.0, 1.0);
+        const end = Offset.zero;     
         const curve = Curves.easeOutQuad; 
 
         var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
@@ -22,15 +21,14 @@ class AppTransitions {
     );
   }
 
-  // 2. Slide Down (Sesuai slide_down.xml)
+  // 2. Slide Down
   static Route slideDown(Widget page) {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionDuration: const Duration(milliseconds: 500),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset.zero;      // dari tempat semula (0%)
-        const end = Offset(0.0, 1.0);   // ke bawah (100%)
-        // accelerate_quad di Android setara dengan easeInQuad di Flutter
+        const begin = Offset.zero;    
+        const end = Offset(0.0, 1.0);  
         const curve = Curves.easeInQuad;
 
         var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
@@ -43,19 +41,17 @@ class AppTransitions {
     );
   }
 
-  // 3. Fade Out (Sesuai fade_out.xml)
+  // 3. Fade Out
   static Route fadeOut(Widget page) {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionDuration: const Duration(milliseconds: 500),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = 1.0; // fromAlpha
-        const end = 0.0;   // toAlpha
+        const begin = 1.0;
+        const end = 0.0;  
 
         var tween = Tween(begin: begin, end: end);
 
-        // Karena ini pindah halaman, biasanya gabungan fade in/out. 
-        // Kalau lu pengen strictly fade out layarnya:
         return FadeTransition(
           opacity: animation.drive(tween),
           child: child,
