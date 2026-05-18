@@ -29,7 +29,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadProfileData();
   }
 
-Future<void> _loadProfileData() async {
+  Future<void> _loadProfileData() async {
     final prefs = await SharedPreferences.getInstance();
     String? pathDariDB = prefs.getString("foto"); 
 
@@ -39,18 +39,15 @@ Future<void> _loadProfileData() async {
 
       // PENGAMAN ANTI-BADAI BUAT FOTO
       if (pathDariDB != null && pathDariDB.isNotEmpty) {
-        // Bersihin spasi yang gak keliatan
         String cleanPath = pathDariDB.trim();
         
-        // GANTI pathDariDB JADI cleanPath DI BAWAH INI BRE:
         if (cleanPath.startsWith('http')) {
           _photoUrl = cleanPath; 
         } else {
-          // PAKAI JALUR BARU (Tanpa /storage)
-          _photoUrl = "https://nganjukabirupa.pbltifnganjuk.com/profil/$cleanPath";
+          // FIX: Ditambahkan timestamp (?v=) di ujung URL biar Flutter dipaksa reload dari hosting, bukan cache!
+          _photoUrl = "https://nganjukabirupa.pbltifnganjuk.com/profil/$cleanPath?v=${DateTime.now().millisecondsSinceEpoch}";
         }
         
-        // CETAK KE CONSOLE BIAR LU TAU PASTI LINK-NYA APA
         debugPrint("ALARM PROFIL: URL Foto Fix = $_photoUrl");
       } else {
         _photoUrl = null;
@@ -63,17 +60,15 @@ Future<void> _loadProfileData() async {
   // LOGIKA SISTEM FOTO PROFIL (PICK, CROP, UPLOAD)
   // ==========================================
 
-  // 1. Fungsi buat milih gambar dari Galeri
   Future<void> _pickImage() async {
     try {
       final XFile? pickedFile = await _picker.pickImage(
-        source: ImageSource.gallery, // Bisa diganti kamera kalau mau
+        source: ImageSource.gallery,
         maxWidth: 1000,
         maxHeight: 1000,
       );
       
       if (pickedFile != null) {
-        // Kalau dapet gambarnya, langsung suruh crop
         _cropImage(pickedFile.path);
       }
     } catch (e) {
@@ -81,22 +76,20 @@ Future<void> _loadProfileData() async {
     }
   }
 
-  // 2. Fungsi buat nge-crop gambar (Sistem Crop)
   Future<void> _cropImage(String filePath) async {
     try {
       CroppedFile? croppedFile = await ImageCropper().cropImage(
         sourcePath: filePath,
-        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1), // Paksa Kotak (1:1)
-        compressQuality: 80, // Kompres biar nggak kegedean
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+        compressQuality: 80,
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: 'Potong Foto Profil',
             toolbarColor: const Color(0xFF2E9FA6),
             toolbarWidgetColor: Colors.white,
             initAspectRatio: CropAspectRatioPreset.square,
-            lockAspectRatio: true, // Kunci rasionya
+            lockAspectRatio: true,
           ),
-          // iOSUiSettings(title: 'Potong Foto Profil'), // Tambahin kalau tes di iOS
         ],
       );
 
@@ -105,7 +98,6 @@ Future<void> _loadProfileData() async {
           _imageFile = File(croppedFile.path); // Tampilkan lokal dulu
           _photoUrl = null; // Matiin URL server sementara
         });
-        // Langsung upload ke server
         _uploadPhoto();
       }
     } catch (e) {
@@ -113,23 +105,21 @@ Future<void> _loadProfileData() async {
     }
   }
 
-  // 3. Fungsi buat upload foto (Multipart) ke update_profile.php
   Future<void> _uploadPhoto() async {
     if (_imageFile == null) return;
 
     final prefs = await SharedPreferences.getInstance();
     String idCustomer = prefs.getString("id_customer") ?? "";
-    String token = prefs.getString("token") ?? ""; // AMBIL TOKEN!
+    String token = prefs.getString("token") ?? "";
 
     setState(() => _isLoading = true);
 
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/api/profile/update'), // URL LARAVEL BARU
+        Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/api/profile/update'),
       );
 
-      // TEMPEL TOKEN DI HEADER BIAR GAK UNAUTHENTICATED
       request.headers.addAll({
         'Accept': 'application/json',
         'Authorization': 'Bearer $token',
@@ -146,10 +136,16 @@ Future<void> _loadProfileData() async {
       var res = jsonDecode(response.body);
       
       if (res['status'] == 'success') {
+        // FIX UTAMA: Simpan respon string foto baru dari Laravel ke SharedPreferences
         await prefs.setString("foto", res['foto']);
+        
+        setState(() {
+          _imageFile = null; // Bersihkan temporary file lokal biar beralih ke NetworkImage
+        });
+
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Foto berhasil diupdate!")));
-        _loadProfileData(); 
+        _loadProfileData(); // Panggil ulang untuk generate URL baru + timestamp
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal: ${res['message']}")));
@@ -162,7 +158,6 @@ Future<void> _loadProfileData() async {
     }
   }
 
-  // 4. Fungsi buat hapus foto ke delete_foto.php
   Future<void> _deletePhoto() async {
     final prefs = await SharedPreferences.getInstance();
     String idCustomer = prefs.getString("id_customer") ?? "";
@@ -175,7 +170,7 @@ Future<void> _loadProfileData() async {
         Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/api/profile/hapus-foto'),
         headers: {
           'Accept': 'application/json',
-          'Authorization': 'Bearer $token', // TEMPEL TOKEN
+          'Authorization': 'Bearer $token',
         },
         body: {'id_customer': idCustomer},
       );
@@ -183,8 +178,11 @@ Future<void> _loadProfileData() async {
       var res = jsonDecode(response.body);
 
       if (res['status'] == 'success') {
-        await prefs.remove("foto");
-        setState(() => _photoUrl = null); // Kosongin dari UI
+        await prefs.setString("foto", ""); // Set string kosong di lokal pref, jangan di-remove total
+        setState(() {
+          _imageFile = null;
+          _photoUrl = null;
+        });
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Foto berhasil dihapus!")));
       } else {
@@ -199,21 +197,18 @@ Future<void> _loadProfileData() async {
     }
   }
 
-  // 5. Fungsi buat nampilin Dialog Opsi (Ganti/Hapus)
   void _showFotoOptionsDialog() {
-    // FIX: Pakai List<String>, bukan String[]
     List<String> options = ["Ganti Foto", "Hapus Foto"]; 
     
     showDialog(
       context: context,
       builder: (context) {
-        // FIX: Pakai SimpleDialog biar gampang nampilin list pilihan
         return SimpleDialog(
           title: const Text("Pilihan Foto Profil", style: TextStyle(fontWeight: FontWeight.bold)),
           children: options.map((option) {
             return SimpleDialogOption(
               onPressed: () {
-                Navigator.pop(context); // Tutup dialog
+                Navigator.pop(context);
                 if (option == "Ganti Foto") {
                   _pickImage();
                 } else if (option == "Hapus Foto") {
@@ -237,36 +232,33 @@ Future<void> _loadProfileData() async {
     );
   }
 
-  // ==========================================
-  // LOGIKA PREVIEW FOTO (FULL SCREEN & BISA DI-ZOOM)
-  // ==========================================
   void _showImagePreview() {
-    // Kalau avatarnya masih kosong (belum ada foto lokal & server), gak usah preview
     if (_imageFile == null && _photoUrl == null) return;
 
     showDialog(
       context: context,
       builder: (context) {
         return Dialog(
-          backgroundColor: Colors.transparent, // Background tembus pandang (gelap)
-          insetPadding: const EdgeInsets.all(16), // Jarak dari pinggir HP
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.all(16),
           child: Stack(
             alignment: Alignment.center,
             children: [
-              // InteractiveViewer = Biar fotonya bisa di cubit (Zoom In/Out)
               InteractiveViewer(
                 panEnabled: true,
                 minScale: 0.5,
-                maxScale: 4.0, // Maksimal zoom 4x
+                maxScale: 4.0,
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16), // Bikin ujungnya agak tumpul dikit
+                  borderRadius: BorderRadius.circular(16),
                   child: _imageFile != null
                       ? Image.file(_imageFile!, fit: BoxFit.contain)
-                      : Image.network(_photoUrl!, fit: BoxFit.contain),
+                      : Image.network(
+                          _photoUrl!, 
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 100, color: Colors.white),
+                        ),
                 ),
               ),
-              
-              // Tombol Silang (Close) di pojok kanan atas
               Positioned(
                 top: -10,
                 right: -10,
@@ -282,9 +274,6 @@ Future<void> _loadProfileData() async {
     );
   }
 
-  // ==========================================
-  // LOGIKA UPDATE DATA TEKS (NAMA & EMAIL)
-  // ==========================================
   Future<void> _updateProfile() async {
     setState(() => _isLoading = true);
     final prefs = await SharedPreferences.getInstance();
@@ -293,16 +282,16 @@ Future<void> _loadProfileData() async {
 
     try {
       var response = await http.post(
-        Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/api/profile/update'), // URL LARAVEL
+        Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/api/profile/update'),
         headers: {
           'Accept': 'application/json',
-          'Authorization': 'Bearer $token', // TEMPEL TOKEN
+          'Authorization': 'Bearer $token',
         },
         body: {
           "id_customer": idCustomer,
           "nama_customer": _nameController.text,
-          "email_customer": _emailController.text, // Kirim Email
-          "password": _passwordController.text, // Kirim Password
+          "email_customer": _emailController.text,
+          "password": _passwordController.text,
         },
       );
 
@@ -311,9 +300,16 @@ Future<void> _loadProfileData() async {
       if (res['status'] == 'success') {
         await prefs.setString("nama_customer", _nameController.text);
         await prefs.setString("email", _emailController.text);
+        
+        // FIX TAMBAHAN: Di fungsi update teks, kalau server ngasih respon data foto, ikut simpan juga biar sinkron
+        if (res['data'] != null && res['data']['foto'] != null) {
+          await prefs.setString("foto", res['data']['foto']);
+        }
+
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Profil berhasil diupdate!")));
         _passwordController.clear();
+        _loadProfileData(); // Reload data biar UI refresh total
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? "Gagal Update")));
@@ -327,26 +323,19 @@ Future<void> _loadProfileData() async {
   }
 
   Future<void> _logout() async {
-    setState(() => _isLoading = true); // Biar tombolnya muter (opsional)
-
+    setState(() => _isLoading = true);
     try {
-      // 1. Hapus Sesi Aplikasi (SharedPreferences)
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
 
-      // 2. Hapus Sesi Google (Biar nanya akun lagi pas login)
       final GoogleSignIn googleSignIn = GoogleSignIn();
       bool isSignedIn = await googleSignIn.isSignedIn();
       if (isSignedIn) {
         await googleSignIn.signOut();
-        // Kalau lu mau bener-bener "lupa" hapus aksesnya, bisa tambah ini:
-        // await googleSignIn.disconnect(); 
       }
 
       if (!mounted) return;
-      // 3. Pindah ke Login dan hapus riwayat halaman
       Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-      
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error logout: $e")));
@@ -368,7 +357,6 @@ Future<void> _loadProfileData() async {
           child: SingleChildScrollView(
             child: Stack(
               children: [
-                // HEADER
                 Container(
                   height: 180,
                   width: double.infinity,
@@ -386,7 +374,6 @@ Future<void> _loadProfileData() async {
                     ],
                   ),
                 ),
-                // KONTEN UTAMA
                 Padding(
                   padding: const EdgeInsets.only(top: 120, left: 16, right: 16),
                   child: Column(
@@ -400,39 +387,30 @@ Future<void> _loadProfileData() async {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              
-                              // ==========================================
-                              // LOGIKA AVATAR PROFIL (Tampil Gambar)
-                              // ==========================================
                               InkWell(
-                                onTap: _showFotoOptionsDialog, // DI KLIK MUNCUL OPSI
-                                onLongPress: _showImagePreview, // DI TEKAN LAMA MUNCUL PREVIEW
+                                onTap: _showFotoOptionsDialog,
+                                onLongPress: _showImagePreview,
                                 child: Container(
                                   width: 70, height: 70,
                                   decoration: BoxDecoration(
                                     color: Colors.grey.shade200,
                                     shape: BoxShape.circle,
                                     border: Border.all(color: Colors.grey.shade400, width: 2),
-                                    
-                                    // Logika prioritas nampilin gambar
                                     image: _imageFile != null
-                                        // 1. Tampilkan lokal dulu kalau habis milih
                                         ? DecorationImage(image: FileImage(_imageFile!), fit: BoxFit.cover)
                                         : _photoUrl != null
-                                            // 2. Kalau gak ada lokal, tampilkan URL server
-                                            ? DecorationImage(image: NetworkImage(_photoUrl!), fit: BoxFit.cover)
-                                            // 3. Kalau gak ada dua-duanya, kosong
+                                            ? DecorationImage(
+                                                image: NetworkImage(_photoUrl!), 
+                                                fit: BoxFit.cover,
+                                              )
                                             : null,
                                   ),
-                                  // 4. Kalau kosong, tampilkan ikon default
                                   child: (_imageFile == null && _photoUrl == null)
                                       ? const Icon(Icons.person, size: 40, color: Colors.grey)
                                       : null,
                                 ),
                               ),
                               const SizedBox(width: 16),
-                              
-                              // FORM INPUT (Sama kayak kodingan lu)
                               Expanded(
                                 child: Column(
                                   children: [
@@ -461,7 +439,6 @@ Future<void> _loadProfileData() async {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      // TOMBOL LOGOUT
                       SizedBox(
                         width: double.infinity, height: 50,
                         child: ElevatedButton(
