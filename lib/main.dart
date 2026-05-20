@@ -6,12 +6,11 @@ import 'firebase_options.dart';
 // Import fitur-fitur lu
 import 'package:nganjukabirupa/features/auth/forgot_password_success_screen.dart';
 import 'package:nganjukabirupa/features/auth/set_new_password_screen.dart';
-import 'package:nganjukabirupa/main_navigation.dart';
+import 'package:nganjukabirupa/main_navigation.dart'; // Pondasi wadah PageView lu
 import 'features/splash/splash_screen.dart';
 import 'features/auth/register_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/dashboard/tambah_review_screen.dart';
-import 'features/dashboard/profile_screen.dart';
 import 'features/auth/forgot_password_screen.dart';
 import 'features/auth/verify_code_screen.dart';
 
@@ -20,9 +19,9 @@ void main() async {
   
   try {
     await dotenv.load(fileName: ".env");
-    print("DEBUG: .env berhasil di-load!");
+    debugPrint("DEBUG: .env berhasil di-load!");
   } catch (e) {
-    print("DEBUG: Gagal load .env -> $e");
+    debugPrint("DEBUG: Gagal load .env -> $e");
   }
   
   // 1. Inisialisasi Firebase
@@ -30,7 +29,6 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Langsung jalankan MyApp tanpa perlu oper routeAwal
   runApp(const MyApp());
 }
 
@@ -58,10 +56,12 @@ class MyApp extends StatelessWidget {
         '/verify-code': (context) => const VerifyCodeScreen(),
         '/set-new-password': (context) => const SetNewPasswordScreen(),
         '/forgot-password-success': (context) => const ForgotPasswordSuccessScreen(),
-        '/dashboard': (context) => const MainNavigation(), 
-        '/riwayat': (context) => const MainNavigation(initialIndex: 1),
         '/tambah_review': (context) => const TambahReviewScreen(),
-        '/profile': (context) => const ProfileScreen(),
+        
+        // 👇 LOGIKA RUTE DINAMIS (Wajib arahkan semua ke wadah MainNavigation)
+        '/dashboard': (context) => const MainNavigation(initialIndex: 0), // Default index 0 (Dashboard)
+        '/riwayat': (context) => const MainNavigation(initialIndex: 1),   // Lompat ke index 1 (Riwayat)
+        '/profile': (context) => const MainNavigation(initialIndex: 2),   // Lompat ke index 2 (Profile)
       },
     );
   }

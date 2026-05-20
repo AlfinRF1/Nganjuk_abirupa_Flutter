@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+// 👇 FIX MUTLAK: Alamat import diganti pakai path absolut package aplikasi lu biar gak nyasar
+import 'package:nganjukabirupa/features/pemesanan/qr_code_screen.dart'; 
 
 class DetailRiwayatBottomSheet extends StatelessWidget {
   final Map<String, dynamic> data;
@@ -12,10 +14,13 @@ class DetailRiwayatBottomSheet extends StatelessWidget {
   });
 
   Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'lunas': return Colors.green;
-      case 'belum lunas': return const Color.fromARGB(255, 255, 0, 0);
-      default: return Colors.grey;
+    switch (status.trim().toLowerCase()) {
+      case 'lunas': 
+        return Colors.green;
+      case 'belum lunas': 
+        return const Color.fromARGB(255, 255, 0, 0);
+      default: 
+        return Colors.grey;
     }
   }
 
@@ -23,7 +28,7 @@ class DetailRiwayatBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final currencyFormat = NumberFormat.currency(locale: 'id', symbol: '', decimalDigits: 0);
 
-    String rawStatus = data['status'].toString();
+    String rawStatus = data['status'].toString().trim();
     String finalStatus = rawStatus; 
 
     String tglFormatted = "-";
@@ -34,18 +39,15 @@ class DetailRiwayatBottomSheet extends StatelessWidget {
       tglFormatted = data['tanggal'].toString();
     }
 
-    // Cek apakah API mereturn spesifik 'nama_customer' di item transaksi ini.
-    // Jika ada dan tidak kosong, gunakan itu. Jika tidak ada, gunakan nama akun login.
     String namaDariApi = data['nama_customer']?.toString().trim() ?? '';
     String namaTampil = namaDariApi.isNotEmpty ? namaDariApi : namaCustomer;
 
-    // 1. AMBIL TINGGI LAYAR HP
     double screenHeight = MediaQuery.of(context).size.height;
+    final bool isBelumLunas = finalStatus.toLowerCase() == 'belum lunas';
 
     return Container(
-      // 2. KITA SET TINGGINYA 75% DARI LAYAR (Biar langsung ngebuka tinggi!)
-      height: screenHeight * 0.75, 
-      padding: const EdgeInsets.all(24),
+      height: isBelumLunas ? screenHeight * 0.78 : screenHeight * 0.72, 
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -54,7 +56,7 @@ class DetailRiwayatBottomSheet extends StatelessWidget {
         children: [
           // --- HANDLE ---
           Container(width: 50, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10))),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
           // --- HEADER ---
           Row(
@@ -64,7 +66,7 @@ class DetailRiwayatBottomSheet extends StatelessWidget {
               const Text("Riwayat Pembelian", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
           // --- KONTEN TENGAH (RESI CARD) ---
           Container(
@@ -82,9 +84,8 @@ class DetailRiwayatBottomSheet extends StatelessWidget {
                 Text(data['lokasi'] ?? '', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
                 const Divider(height: 24),
                 
-                // Gunakan variabel dinamis namaTampil di sini:
                 _buildRowDetail("Nama", namaTampil),
-                _buildRowDetail("ID Transaksi", "#TX${data['id_transaksi']}"),
+                _buildRowDetail("ID Transaksi", "#TX${data['id_transaksi'] ?? data['id_pemesanan']}"),
                 _buildRowDetail("Tanggal", tglFormatted),
                 
                 Padding(
@@ -96,7 +97,8 @@ class DetailRiwayatBottomSheet extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: _getStatusColor(finalStatus).withOpacity(0.1),
+                          // 👇 FIX DEPRECATED: Menggunakan .withValues() sesuai standard Flutter SDK baru lu
+                          color: _getStatusColor(finalStatus).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: _getStatusColor(finalStatus)),
                         ),
@@ -118,7 +120,41 @@ class DetailRiwayatBottomSheet extends StatelessWidget {
             ),
           ),
           
-          // 3. PENDORONG AJAIB (SPACER)
+          // --- TOMBOL BAYAR SEKARANG ---
+          if (isBelumLunas) ...[
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => QrCodeScreen(
+                        totalHarga: int.tryParse(data['total_harga'].toString()) ?? 0,
+                        idWisata: int.tryParse(data['id_wisata'].toString()) ?? 0,
+                        // 👇 SEKARANG LANGSUNG NODONG KEY id_pemesanan YANG FRESH DARI LARAVEL
+                        idPemesanan: int.tryParse(data['id_pemesanan']?.toString() ?? '0') ?? 0,
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.payment_rounded, color: Colors.white, size: 20),
+                label: const Text(
+                  "Bayar Sekarang (Buka QR)",
+                  style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0BB5A7), 
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  elevation: 0,
+                ),
+              ),
+            ),
+          ],
+
           const Spacer(),
 
           // --- FOOTER ---

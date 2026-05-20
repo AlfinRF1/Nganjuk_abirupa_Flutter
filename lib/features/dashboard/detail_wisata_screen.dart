@@ -7,10 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-// --- 1. API CONFIG (Semi-Centralized sesuai request lu) ---
 class ApiConfig {
   static const String baseUrl = "https://nganjukabirupa.pbltifnganjuk.com/api";
-  // Berdasarkan screenshot lu, folder event & destinasi jadi satu di sini
   static const String imgUrl = "https://nganjukabirupa.pbltifnganjuk.com/images/destinasi";
   static String detailWisata(String id) => "$baseUrl/wisata/$id";
 }
@@ -29,60 +27,64 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
   bool _isLoading = true;
   late WisataModel _detailWisata;
 
-  // Deklarasi API lokal buat ulasan biar gampang
-  final String _ulasanUrl = "https://nganjukabirupa.pbltifnganjuk.com/api/ulasan";
-
   @override
   void initState() {
     super.initState();
     _detailWisata = widget.wisata; 
     _ambilDataUser();
-    _fetchSemuaData(); // Sekali panggil buat Detail, Event, & Review
+    _fetchSemuaData(); 
   }
 
-  // --- 2. FUNGSI FETCH DATA (Hostinger Ready) ---
   Future<void> _fetchSemuaData() async {
-  if (!mounted) return;
-  setState(() => _isLoading = true);
+    if (!mounted) return;
+    setState(() => _isLoading = true);
 
-  try {
-    // Ambil token dari memori HP
-    final prefs = await SharedPreferences.getInstance();
-    String? idCustomer = prefs.getString("id_customer");
-    String? token = prefs.getString("token");
-
-    debugPrint("DEBUG: ID yang dikirim ke server adalah -> $idCustomer");
-    
-    final response = await http.get(
-      Uri.parse(ApiConfig.detailWisata(widget.wisata.idWisata.toString())),
-      headers: {
-        'Accept': 'application/json', // Wajib biar Laravel gak kirim HTML
-        'Authorization': 'Bearer $token', // Biar gak 401 bre!
-      },
-    ).timeout(const Duration(seconds: 10));
-
-    if (response.statusCode == 200) {
-      var res = jsonDecode(response.body);
-      if (res['status'] == 'success' && mounted) {
-        setState(() {
-          _detailWisata = WisataModel.fromJson(res['data']);
-          _listReviews = res['data']['ulasan'] ?? [];
-          _isLoading = false;
-        });
-      }
-    } else if (response.statusCode == 401) {
-      debugPrint("ALARM: Token expired atau gak valid!");
-    }
-  } catch (e) {
-    debugPrint("Koneksi Hostinger Error: $e");
-    if (mounted) setState(() => _isLoading = false);
-  }
-}
-
-  Future<void> _fetchReviews() async {
-    // Fungsi ini dipanggil buat refresh setelah posting review
     try {
-      var response = await http.get(Uri.parse(ApiConfig.detailWisata(widget.wisata.idWisata)));
+      final prefs = await SharedPreferences.getInstance();
+      String? idCustomer = prefs.getString("id_customer");
+      String? token = prefs.getString("token");
+
+      debugPrint("DEBUG: ID yang dikirim ke server adalah -> $idCustomer");
+      
+      final response = await http.get(
+        Uri.parse(ApiConfig.detailWisata(widget.wisata.idWisata.toString())),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token', 
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        var res = jsonDecode(response.body);
+        if (res['status'] == 'success' && mounted) {
+          setState(() {
+            _detailWisata = WisataModel.fromJson(res['data']);
+            _listReviews = res['data']['ulasan'] ?? [];
+            _isLoading = false;
+          });
+        }
+      } else if (response.statusCode == 401) {
+        debugPrint("ALARM: Token expired atau gak valid!");
+      }
+    } catch (e) {
+      debugPrint("Koneksi Hostinger Error: $e");
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // 👇 FIX MUTLAK: Sekarang fungsi refresh review dipersenjatai Token Bearer agar tidak 401!
+  Future<void> _fetchReviews() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString("token");
+
+      var response = await http.get(
+        Uri.parse(ApiConfig.detailWisata(widget.wisata.idWisata.toString())),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
       if (response.statusCode == 200) {
         var res = jsonDecode(response.body);
         if (mounted) {
@@ -91,7 +93,9 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
           });
         }
       }
-    } catch (e) { debugPrint("Refresh Review Gagal: $e"); }
+    } catch (e) { 
+      debugPrint("Refresh Review Gagal: $e"); 
+    }
   }
 
   Future<void> _ambilDataUser() async {
@@ -112,26 +116,19 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
       length: 3, 
       child: Scaffold(
         backgroundColor: bgColor,
-        
         bottomNavigationBar: Container(
           padding: const EdgeInsets.all(16),
           color: Colors.white,
           child: ElevatedButton(
             onPressed: () {
-              // UDAH DISESUAIKAN 100% SAMA WISATAMODEL
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => PemesananScreen(
-                    // idWisata bentuknya String, kita convert ke int
-                    idWisata: int.tryParse(widget.wisata.idWisata) ?? 0, 
-                    
-                    // tiketDewasa & tiketAnak udah int dari sananya, jadi langsung gas
+                    idWisata: int.tryParse(widget.wisata.idWisata.toString()) ?? 0, 
                     hargaDewasa: widget.wisata.tiketDewasa, 
                     hargaAnak: widget.wisata.tiketAnak,     
-                    
-                    // biayaAsuransi bentuknya String, kita convert ke int juga
-                    tarifAsuransi: int.tryParse(widget.wisata.biayaAsuransi) ?? 1000, 
+                    tarifAsuransi: int.tryParse(widget.wisata.biayaAsuransi.toString()) ?? 1000, 
                   ),
                 ),
               );
@@ -148,7 +145,6 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
             ),
           ),
         ),
-
         body: SafeArea(
           child: Column(
             children: [
@@ -163,9 +159,8 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
                   ],
                 ),
               ),
-
               Container(
-                height: 240, // Pakai yang udah digedein tadi
+                height: 240, 
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
@@ -178,9 +173,7 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
                   child: _buildHeaderImage(),
                 ),
               ),
-
               const SizedBox(height: 16),
-
               const TabBar(
                 labelColor: primaryColor,
                 unselectedLabelColor: Colors.grey,
@@ -192,7 +185,6 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
                   Tab(text: "REVIEWS"),
                 ],
               ),
-
               Expanded(
                 child: TabBarView(
                   children: [
@@ -225,88 +217,73 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
   }
 
   Widget _buildEventTab() {
-  // Pakai _detailWisata yang datanya baru saja kita ambil dari API Detail
-  if (_detailWisata.events.isEmpty) {
-    return const Center(
-      child: Text("Belum ada event di wisata ini.", style: TextStyle(color: Colors.grey)),
+    if (_detailWisata.events.isEmpty) {
+      return const Center(
+        child: Text("Belum ada event di wisata ini.", style: TextStyle(color: Colors.grey)),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _detailWisata.events.length,
+      itemBuilder: (context, index) {
+        final event = _detailWisata.events[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start, 
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                child: CachedNetworkImage(
+                  imageUrl: event.gambarPoster,
+                  width: double.infinity,
+                  fit: BoxFit.fitWidth, 
+                  placeholder: (context, url) => Container(
+                    height: 200, 
+                    color: Colors.grey[200],
+                    child: const Center(child: CircularProgressIndicator(color: Color(0xFF0BB5A7))),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    height: 150,
+                    color: Colors.grey[100],
+                    child: const Icon(Icons.broken_image, color: Colors.grey, size: 40),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(15),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today_rounded, size: 18, color: Color(0xFF0BB5A7)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        "Event: ${event.tglMulai} s/d ${event.tglSelesai}",
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF4e4e4e)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  return ListView.builder(
-  padding: const EdgeInsets.all(16),
-  itemCount: _detailWisata.events.length,
-  itemBuilder: (context, index) {
-    final event = _detailWisata.events[index];
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start, // Biar teks rata kiri
-        children: [
-          // GAMBAR POSTER (Sudah diperbaiki agar tidak kepotong)
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-            child: CachedNetworkImage(
-              imageUrl: event.gambarPoster,
-              width: double.infinity,
-              // Hapus 'height: 180' agar mengikuti panjang asli gambar
-              fit: BoxFit.fitWidth, // Menyesuaikan lebar tanpa memotong tinggi
-              placeholder: (context, url) => Container(
-                height: 200, // Tinggi sementara saat loading
-                color: Colors.grey[200],
-                child: const Center(child: CircularProgressIndicator(color: Color(0xFF0BB5A7))),
-              ),
-              errorWidget: (context, url, error) => Container(
-                height: 150,
-                color: Colors.grey[100],
-                child: const Icon(Icons.broken_image, color: Colors.grey, size: 40),
-              ),
-            ),
-          ),
-          
-          // INFO TANGGAL EVENT
-          Padding(
-            padding: const EdgeInsets.all(15),
-            child: Row(
-              children: [
-                const Icon(Icons.calendar_today_rounded, size: 18, color: Color(0xFF0BB5A7)),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    "Event: ${event.tglMulai} s/d ${event.tglSelesai}",
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: Color(0xFF4e4e4e),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  },
-);
-}
-
-  // --- 3. LOGIKA TAMBAH REVIEW OTOMATIS (UPDATED) ---
   Widget _buildReviewsTab(BuildContext context, Color cardColor, Color textColor) { 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // TOMBOL TULIS REVIEW (Tetap sama seperti logika Anda)
         InkWell(
           borderRadius: BorderRadius.circular(25),
           onTap: () async {
@@ -316,6 +293,7 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
             );
 
             if (hasilReview != null && hasilReview.toString().isNotEmpty) {
+              if (!context.mounted) return;
               showDialog(
                 context: context,
                 barrierDismissible: false,
@@ -327,12 +305,14 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
               try {
                 final prefs = await SharedPreferences.getInstance();
                 String idCustomer = prefs.getString("id_customer") ?? "0";
+                String token = prefs.getString("token") ?? "";
 
                 var response = await http.post(
                   Uri.parse('https://nganjukabirupa.pbltifnganjuk.com/api/ulasan'),
                   headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
+                    "Authorization": "Bearer $token",
                   },
                   body: jsonEncode({
                     "id_wisata": widget.wisata.idWisata,
@@ -374,16 +354,10 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
           ),
         ),
         const SizedBox(height: 16),
-
-        // LOGIKA PEMETAAN REVIEW YANG LEBIH RAMPING
         ..._listReviews.map((review) {
           final Map<String, dynamic> dataReview = review as Map<String, dynamic>; 
           final Map<String, dynamic> customer = (dataReview["customer"] ?? {}) as Map<String, dynamic>;
-          
-          // Langsung tangkap URL matang dari API Laravel Anda
           String fotoUrlDariApi = customer["foto"]?.toString() ?? "";
-
-          debugPrint("Cek URL Foto Ulasan: '$fotoUrlDariApi'");
           
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -393,7 +367,7 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
               customer["nama_customer"]?.toString() ?? "Anonim",
               dataReview["tanggal"]?.toString() ?? "-",
               dataReview["ulasan"]?.toString() ?? "",
-              fotoUrlDariApi // <--- Langsung teruskan URL aslinya
+              fotoUrlDariApi 
             ),
           );
         }),
@@ -401,7 +375,6 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
     );
   }
 
-  // --- WIDGET REVIEW CARD TAHAN BANTING (MENGGUNAKAN CACHED NETWORK IMAGE) ---
   Widget _buildReviewCard(Color bgColor, Color textColor, String name, String date, String review, String avatarUrl) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -409,16 +382,13 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // MENGGANTIKAN CIRCLE AVATAR DENGAN CLIPRRECT + CACHED NETWORK IMAGE
           ClipRRect(
             borderRadius: BorderRadius.circular(50),
             child: avatarUrl.isNotEmpty && avatarUrl != "null"
                 ? CachedNetworkImage(
                     imageUrl: avatarUrl,
-                    width: 32,
-                    height: 32,
+                    width: 32, height: 32,
                     fit: BoxFit.cover,
-                    // Indikator memutar kecil saat gambar sedang diunduh
                     placeholder: (context, url) => Container(
                       width: 32, height: 32,
                       color: Colors.grey.shade200,
@@ -427,7 +397,6 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF0BB5A7)),
                       ),
                     ),
-                    // Pengaman Mutlak: Jika link URL mati atau file terhapus di server, otomatis tampilkan ikon abu-abu
                     errorWidget: (context, url, error) => Container(
                       width: 32, height: 32,
                       color: Colors.grey.shade300,
@@ -462,7 +431,6 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
     );
   }
 
-
   Widget _buildInfoCard(Color bgColor, Color textColor, IconData icon, String title, String content) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -488,32 +456,25 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
   }
 
   Widget _buildHeaderImage() {
-  // Cek kalau gambar kosong dari API
-  if (widget.wisata.gambar.isEmpty) {
-    return Container(
-      color: Colors.grey[300], 
-      child: const Icon(Icons.image_not_supported, size: 50)
+    if (widget.wisata.gambar.isEmpty) {
+      return Container(
+        color: Colors.grey[300], 
+        child: const Icon(Icons.image_not_supported, size: 50)
+      );
+    }
+    return CachedNetworkImage(
+      imageUrl: widget.wisata.gambar, 
+      fit: BoxFit.cover, 
+      width: double.infinity, 
+      height: double.infinity,
+      placeholder: (context, url) => Container(
+        color: Colors.grey[300],
+        child: const Center(child: CircularProgressIndicator(color: Colors.green)),
+      ),
+      errorWidget: (context, url, error) => Container(
+        color: Colors.grey[300], 
+        child: const Icon(Icons.broken_image, size: 50, color: Colors.grey)
+      ),
     );
   }
-
-  // Langsung pakai CachedNetworkImage untuk semua wisata
-  return CachedNetworkImage(
-    imageUrl: widget.wisata.gambar, 
-    fit: BoxFit.cover, 
-    width: double.infinity, 
-    height: double.infinity,
-    // Biar gak cuma abu-abu doang, kita kasih loading spinner pas gambar lagi didownload
-    placeholder: (context, url) => Container(
-      color: Colors.grey[300],
-      child: const Center(
-        child: CircularProgressIndicator(color: Colors.green),
-      ),
-    ),
-    // Tampilan kalau link gambarnya mati atau koneksi error
-    errorWidget: (context, url, error) => Container(
-      color: Colors.grey[300], 
-      child: const Icon(Icons.broken_image, size: 50, color: Colors.grey)
-    ),
-  );
-}
 }

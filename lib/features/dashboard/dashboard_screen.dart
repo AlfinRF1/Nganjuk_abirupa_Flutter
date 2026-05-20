@@ -7,7 +7,6 @@ import 'package:shimmer/shimmer.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -20,8 +19,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<WisataModel> _allWisata = [];
   List<WisataModel> _filteredWisata = [];
   bool _isLoading = true;
-  
-  // Ganti teks defaultnya jadi ini biar keliatan elegan pas lagi loading sedetik
   String _namaUser = "Memuat..."; 
 
   // Search Controller
@@ -30,18 +27,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _loadUserData(); // <--- PANGGIL FUNGSI INI DULUAN
+    _loadUserData(); 
     _fetchWisata();
-    
     _searchController.addListener(_filterWisata);
   }
 
-  // --- TAMBAHIN FUNGSI INI DI BAWAH initState ---
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      // PERHATIAN: Pastikan kata 'nama_customer' ini SAMA PERSIS 
-      // dengan key yang lu pake pas nyimpen data di halaman Login lu.
       _namaUser = prefs.getString('nama_customer') ?? "Pengunjung";
     });
   }
@@ -64,14 +57,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       
       setState(() {
         _allWisata = data;
-        _filteredWisata = data; // Awalnya tampilkan semua
+        _filteredWisata = data; 
         _isLoading = false;
       });
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
-      // Tampilkan error kalau gagal
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.toString())),
@@ -94,52 +86,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F3F8), // Warna background dari XML lu
+      backgroundColor: const Color(0xFFF0F3F8), 
       
-      // --- TAMBAHAN: FLOATING ACTION BUTTON AI ---
+      // FLOATING ACTION BUTTON AI
       floatingActionButton: FloatingActionButton(
         onPressed: () => showModalBottomSheet(
           isScrollControlled: true,
           context: context, 
-          builder: (c) => ChatAiModal() // Ini modal AI yang tadi kita buat
+          builder: (c) => const ChatAiModal() 
         ),
         backgroundColor: const Color(0xFF2E9FA6),
         child: const Icon(Icons.smart_toy, color: Colors.white),
       ),
-      // ------------------------------------------
 
-      // BOTTOM NAVIGATION BAR (Pengganti Footer LinearLayout lu)
-      // Note: Kalau lu pake main_navigation.dart, blok bottomNavigationBar ini bisa lu hapus nanti
-      
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _fetchWisata, // Fungsi SwipeRefreshLayout
-          color: const Color(0xFF2E9FA6),
-          child: Column(
-            children: [
-              // HEADER & SEARCH BAR (Pengganti FrameLayout XML)
-              _buildHeader(),
+        child: Column(
+          children: [
+            // HEADER & SEARCH BAR 固定 (Tetap di atas pas di-scroll)
+            _buildHeader(),
 
-              // KONTEN LIST (Pengganti RecyclerView)
-              Expanded(
-                child: _isLoading
-                    ? _buildShimmerLoading() // Kalau loading tampilkan Shimmer
-                    : _filteredWisata.isEmpty
-                        ? Center(
+            // KONTEN LIST (Bisa di-scroll & di-refresh)
+            Expanded(
+              child: _isLoading
+                  ? _buildShimmerLoading() 
+                  : _filteredWisata.isEmpty
+                      ? Center(
+                          child: SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 const Icon(Icons.search_off, size: 64, color: Colors.grey),
                                 const SizedBox(height: 16),
                                 const Text("Wisata tidak ditemukan"),
-                                TextButton(onPressed: _fetchWisata, child: const Text("Coba Refresh"))
+                                TextButton(
+                                  onPressed: _fetchWisata, 
+                                  child: const Text("Coba Refresh"),
+                                )
                               ],
                             ),
-                          )
-                        : _buildWisataList(), // Kalau selesai tampilkan Data
-              ),
-            ],
-          ),
+                          ),
+                        )
+                      : RefreshIndicator(
+                          onRefresh: _fetchWisata,
+                          color: const Color(0xFF2E9FA6),
+                          // 👇 PENGAMUDAH: Bungkus ListView di dalam RefreshIndicator yang pas
+                          child: _buildWisataList(), 
+                        ),
+            ),
+          ],
         ),
       ),
     );
@@ -154,11 +149,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       children: [
         // HEADER GRADASI
         Container(
-          height: 140, // Disesuaikan biar lebih lega
+          height: 140, 
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: const BoxDecoration(
-            gradient: LinearGradient( // <-- INI YANG BIKIN GRADASI
+            gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [Color(0xFF2E9FA6), Color(0xFF66BB6A)], 
@@ -171,7 +166,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // GANTI TEKS LOGO PAKAI IMAGE ASSET KALAU ADA
               Image.asset('assets/images/logotextputih.png', width: 120), 
               const SizedBox(height: 12),
               Text(
@@ -201,7 +195,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               decoration: const InputDecoration(
                 hintText: "Mau Liburan Kemana?",
                 hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
-                prefixIcon: Icon(Icons.search, color: Color(0xFF2E9FA6)), // Ikon warna senada
+                prefixIcon: Icon(Icons.search, color: Color(0xFF2E9FA6)), 
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.symmetric(vertical: 14),
               ),
@@ -217,7 +211,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // ==========================================
   Widget _buildWisataList() {
     return ListView.builder(
-      padding: const EdgeInsets.only(top: 40, left: 16, right: 16, bottom: 16),
+      // Diberi top padding 35 agar item list pertama tidak tenggelam di bawah kotak search bar melayang
+      padding: const EdgeInsets.only(top: 35, left: 16, right: 16, bottom: 16),
       itemCount: _filteredWisata.length,
       itemBuilder: (context, index) {
         final wisata = _filteredWisata[index];
@@ -225,64 +220,56 @@ class _DashboardScreenState extends State<DashboardScreen> {
           elevation: 2,
           margin: const EdgeInsets.only(bottom: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          clipBehavior: Clip.hardEdge, // <-- Tambahin ini biar efek kliknya rapi
+          clipBehavior: Clip.hardEdge, 
           child: InkWell(
             onTap: () {
-              // --- INI KODE BUAT PINDAH HALAMANNYA BRE ---
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => DetailWisataScreen(wisata: wisata),
                 ),
               );
-              // -------------------------------------------
             },
             child: Row(
-  children: [
-    // GAMBAR WISATA
-    ClipRRect(
-      borderRadius: const BorderRadius.only(
-        topLeft: Radius.circular(12),
-        bottomLeft: Radius.circular(12),
-      ),
-      child: wisata.gambar.isEmpty
-          ? Container(
-              width: 100, 
-              height: 100, 
-              color: Colors.grey[300],
-              child: const Icon(Icons.image_not_supported, color: Colors.grey),
-            )
-
-            //gambar  
-          : CachedNetworkImage(
-              imageUrl: wisata.gambar,
-              width: 100,
-              height: 100,
-              fit: BoxFit.cover,
-              // Biar gak cuma kotak abu-abu, kita kasih loading spinner kecil
-              placeholder: (context, url) => Container(
-                width: 100, 
-                height: 100, 
-                color: Colors.grey[300],
-                child: const Center(
-                  child: SizedBox(
-                    width: 20, 
-                    height: 20, 
-                    child: CircularProgressIndicator(color: Colors.green, strokeWidth: 2),
+              children: [
+                // GAMBAR WISATA
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    bottomLeft: Radius.circular(12),
                   ),
+                  child: wisata.gambar.isEmpty
+                      ? Container(
+                          width: 100, 
+                          height: 100, 
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                        )
+                      : CachedNetworkImage(
+                          imageUrl: wisata.gambar,
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            width: 100, 
+                            height: 100, 
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: SizedBox(
+                                width: 20, 
+                                height: 20, 
+                                child: CircularProgressIndicator(color: Colors.green, strokeWidth: 2),
+                              ),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            width: 100, 
+                            height: 100, 
+                            color: Colors.grey[300],
+                            child: const Icon(Icons.broken_image, color: Colors.grey),
+                          ),
+                        ),
                 ),
-              ),
-              // Tampilan kalau link gambarnya mati atau koneksi error
-              errorWidget: (context, url, error) => Container(
-                width: 100, 
-                height: 100, 
-                color: Colors.grey[300],
-                child: const Icon(Icons.broken_image, color: Colors.grey),
-              ),
-            ),
-    ),
-    
-    // ... Lanjut ke elemen Row berikutnya (Teks Nama Wisata, dll) ...
                 const SizedBox(width: 12),
                 
                 // TEKS DETAIL
@@ -330,8 +317,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // ==========================================
   Widget _buildShimmerLoading() {
     return ListView.builder(
-      padding: const EdgeInsets.only(top: 40, left: 16, right: 16, bottom: 16),
-      itemCount: 5, // Tampilkan 5 skeleton
+      padding: const EdgeInsets.only(top: 35, left: 16, right: 16, bottom: 16),
+      itemCount: 5, 
       itemBuilder: (context, index) {
         return Padding(
           padding: const EdgeInsets.only(bottom: 16),
