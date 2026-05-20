@@ -52,7 +52,7 @@ class _TambahReviewScreenState extends State<TambahReviewScreen> {
                       child: const Icon(Icons.arrow_back, color: Colors.white),
                     ),
                     const SizedBox(width: 12),
-                    // Pastikan path gambar logo ini sesuai sama yang lu punya
+                    // Pastikan path gambar logo ini sesuai sama yang di punya
                     Image.asset('assets/images/logotextputih.png', height: 24,
                         errorBuilder: (context, error, stackTrace) => const Text("Nganjuk Abirupa", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
                   ],
