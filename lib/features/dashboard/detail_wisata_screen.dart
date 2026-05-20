@@ -58,7 +58,10 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
         var res = jsonDecode(response.body);
         if (res['status'] == 'success' && mounted) {
           setState(() {
-            _detailWisata = WisataModel.fromJson(res['data']);
+            // 👇 FIX MUTLAK 1: Paksa data objek utama menjadi Map<String, dynamic>
+            var wisataData = Map<String, dynamic>.from(res['data']);
+            _detailWisata = WisataModel.fromJson(wisataData);
+            
             _listReviews = res['data']['ulasan'] ?? [];
             _isLoading = false;
           });
@@ -72,7 +75,6 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
     }
   }
 
-  // 👇 FIX MUTLAK: Sekarang fungsi refresh review dipersenjatai Token Bearer agar tidak 401!
   Future<void> _fetchReviews() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -165,7 +167,7 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(0, 2))
                   ],
                 ),
                 child: ClipRRect(
@@ -234,7 +236,7 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
             ],
           ),
           child: Column(
@@ -355,8 +357,11 @@ class _DetailWisataScreenState extends State<DetailWisataScreen> {
         ),
         const SizedBox(height: 16),
         ..._listReviews.map((review) {
-          final Map<String, dynamic> dataReview = review as Map<String, dynamic>; 
-          final Map<String, dynamic> customer = (dataReview["customer"] ?? {}) as Map<String, dynamic>;
+          // 👇 FIX MUTLAK 2: Bongkar data review mentah menggunakan Map<String, dynamic>.from()
+          final Map<String, dynamic> dataReview = Map<String, dynamic>.from(review as Map); 
+          
+          // 👇 FIX MUTLAK 3: Ambil objek customer di dalamnya dengan metode konversi aman yang sama
+          final Map<String, dynamic> customer = Map<String, dynamic>.from((dataReview["customer"] ?? {}) as Map);
           String fotoUrlDariApi = customer["foto"]?.toString() ?? "";
           
           return Padding(
