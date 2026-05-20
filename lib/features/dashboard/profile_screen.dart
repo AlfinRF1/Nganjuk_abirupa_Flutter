@@ -157,7 +157,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
-
+// Delete Photo
   Future<void> _deletePhoto() async {
     final prefs = await SharedPreferences.getInstance();
     String idCustomer = prefs.getString("id_customer") ?? "";
